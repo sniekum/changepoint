@@ -45,9 +45,9 @@
 #define SQRT2PI 2.50662827463
 #define LEN_MEAN 100.0                // Mean of segment length gaussian 
 #define LEN_SIG 1000.0                // Sigma of segment length gaussian
-#define MIN_SEG_LEN 10                // The minimum length of a segment for model fitting purposes
-#define MAX_PARTICLES 10              // The most particles to ever keep in the filter
-#define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
+#define MIN_SEG_LEN 30                // The minimum length of a segment for model fitting purposes
+#define MAX_PARTICLES 20              // The most particles to ever keep in the filter
+#define RESAMP_PARTICLES 20           // The number of particles to resample back down to when resampling 
 
 using namespace std;
 using namespace articulation_models;
@@ -56,10 +56,10 @@ using namespace articulation_msgs;
 namespace changepoint{
     
 // Choose which model(s) and fitter(s) to use 
-typedef Gauss1DParams ParamsType;
-typedef Gauss1DFitter FitterType;
-//typedef ArticulationParams ParamsType;
-//typedef ArticulationFitter FitterType;
+//typedef Gauss1DParams ParamsType;
+//typedef Gauss1DFitter FitterType;
+typedef ArticulationParams ParamsType;
+typedef ArticulationFitter FitterType;
 
     
 CPDetector::CPDetector(const vector<DataPoint> data_pts)

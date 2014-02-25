@@ -14,6 +14,7 @@ from mpl_toolkits.mplot3d import art3d
 from mpl_toolkits.mplot3d import proj3d
 from matplotlib.patches import Circle
 from itertools import product
+import pickle
 
 def rotation_matrix(d):
     """
@@ -87,80 +88,11 @@ def makeDetectRequest(traj):
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    #Create test data
-    t = []  
-    x = np.random.normal(-1.0, 0.1, 200)
-    t += x.tolist()
-    x = np.random.normal(2.0, 0.3, 40)
-    t += x.tolist()
-    x = np.random.normal(-2.0, 0.1, 20)
-    t += x.tolist()
-    x = np.random.normal(-0.5, 0.5, 20)
-    t += x.tolist()
-    x = np.random.normal(-3.0, 0.7, 20)
-    t += x.tolist()
-    #plot(t)
-    #show()
-    #traj = [[x] for x in t]
+    f = open('bagfiles/2-21-14/diffpickle3', 'r')
+    traj = pickle.load(f)
     
-    #Generate rotational data
-    traj = []
+    #TODO: GET RID OF DATA WHEN NOT MOVING! (Have to do before taking diff...)
     
-    mean = 0.0
-    sigma = 0.05
-    radius = 10.0
-    for i in range(14,-1,-1):
-        pose = [0.0]*7
-        angle = (i * 5.0) * 0.0174532925
-        pose[0] = radius * cos(angle) + np.random.normal(mean, sigma, 1)[0]
-        pose[1] = radius * sin(angle) + np.random.normal(mean, sigma, 1)[0]
-        pose[2] = (np.random.normal(mean, sigma, 1))[0]
-        pose[3] = 0
-        pose[4] = 0
-        pose[5] = sin(angle/2.0)
-        pose[6] = cos(angle/2.0)
-        #traj.append(pose)
-    
-    for i in xrange(15):
-        pose = [0.0]*7
-        #pose[0] = (10.0 - (i+1)/2.0) + np.random.normal(mean, sigma, 1)[0]
-        pose[0] = (5.0 - (i+1)/5.0) + np.random.normal(mean, sigma, 1)[0]
-        pose[1] = np.random.normal(mean, sigma, 1)[0]
-        pose[2] = (np.random.normal(mean, sigma, 1))[0]
-        pose[3] = 0
-        pose[4] = 0
-        pose[5] = 0
-        pose[6] = 1.0
-        traj.append(pose)    
-    
-    radius = 2.0
-    for i in xrange(15):
-        pose = [0.0]*7
-        angle = (i * 5.0) * 0.0174532925
-        pose[0] = radius * cos(angle) + np.random.normal(mean, sigma, 1)[0]
-        pose[1] = radius * sin(angle) + np.random.normal(mean, sigma, 1)[0]
-        pose[2] = (np.random.normal(mean, sigma, 1))[0]
-        pose[3] = 0
-        pose[4] = 0
-        pose[5] = sin(angle/2.0)
-        pose[6] = cos(angle/2.0)
-        #traj.append(pose)
-        
-    sigma = 0.05
-    for i in xrange(50):
-        pose = [0.0]*7
-        pose[0] = 2.0 + np.random.normal(mean, sigma, 1)[0]
-        pose[1] = 0.0 + np.random.normal(mean, sigma, 1)[0]
-        pose[2] = (np.random.normal(mean, sigma, 1))[0]
-        pose[3] = 0
-        pose[4] = 0
-        pose[5] = 0
-        pose[6] = 1.0
-        traj.append(pose)    
-        
-    for t in traj:
-        print t
-        
     X = np.array([traj[i][0] for i in xrange(len(traj))])
     Y = np.array([traj[i][1] for i in xrange(len(traj))])
     Z = np.array([traj[i][2] for i in xrange(len(traj))])
@@ -218,7 +150,7 @@ if __name__ == '__main__':
     #ax.plot(lx,ly,lz, color='r', alpha=0.6)
 
     
-    ax.auto_scale_xyz([0, 5], [-2.5, 2.5], [-2.5, 2.5])
+    #ax.auto_scale_xyz([0, 5], [-2.5, 2.5], [-2.5, 2.5])
     plt.show()   
     req = DetectChangepointsRequest()
     req.data = [DataPoint(x) for x in traj]

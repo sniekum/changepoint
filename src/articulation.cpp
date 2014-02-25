@@ -198,11 +198,11 @@ void ArticulationParams::fillParams(ModelSegment &seg)
     
 ArticulationFitter::ArticulationFitter(int model_id)
 {
-    double sigma_position = 0.1;
-    double sigma_orientation = M_PI/12.0;  // 15 degrees 
+    double sigma_position = 0.01;
+    double sigma_orientation = M_PI/120.0;  // 3 degrees 
     double optimizer_iterations = 0;
     double sac_iterations = 20;
-    double outlier_ratio = 0.05;
+    double outlier_ratio = 0.0;
     
     std::string name;
     if(model_id == 0){
