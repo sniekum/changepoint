@@ -1,0 +1,10 @@
+Documentation for changepoint
+Package maintained by Scott Niekum
+sniekum@cmu.edu
+****************************************
+
+
+OVERVIEW
+---------
+
+This package performs changepoint detection on time series data

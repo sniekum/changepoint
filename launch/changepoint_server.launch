@@ -1,0 +1,4 @@
+<launch>
+	<node name="changepoint_server" pkg="changepoint" type="changepoint_server" 
+	respawn="false" output="screen"/>
+</launch>
