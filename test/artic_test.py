@@ -40,6 +40,7 @@ def rotation_matrix(d):
     M = ddt + np.sqrt(1 - sin_angle**2) * (eye - ddt) + sin_angle * skew
     return M
 
+    
 def pathpatch_2d_to_3d(pathpatch, z = 0, normal = 'z'):
     """
     Transforms a 2D Patch to a 3D patch using the given normal vector.
@@ -69,12 +70,31 @@ def pathpatch_2d_to_3d(pathpatch, z = 0, normal = 'z'):
 
     pathpatch._segment3d = np.array([np.dot(M, (x, y, 0)) + (0, 0, z) for x, y in verts])
 
+    
 def pathpatch_translate(pathpatch, delta):
     """
     Translates the 3D pathpatch by the amount delta.
     """
     pathpatch._segment3d += delta
 
+    
+def q_conjugate(q):
+    w, x, y, z = q
+    return (w, -x, -y, -z)
+
+def q_mult(q1, q2):
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+    return w, x, y, z    
+    
+def qv_mult(q1, v1):
+    q2 = (0.0,) + v1
+    return q_mult(q_mult(q1, q2), q_conjugate(q1))[1:]
+    
     
 def makeDetectRequest(traj):
     try:
@@ -88,7 +108,7 @@ def makeDetectRequest(traj):
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    f = open('bagfiles/2-21-14/diffpickle2', 'r')
+    f = open('bagfiles/2-21-14/diffpickle4', 'r')
     traj = pickle.load(f)
     
     #TODO: GET RID OF DATA WHEN NOT MOVING! (Have to do before taking diff...)
@@ -107,12 +127,16 @@ if __name__ == '__main__':
     
     print
     for seg in resp.segments:
-        print seg
+        print "Model:", seg.model_name, "   Length:", seg.last_point - seg.first_point + 1
+        print "Start:", seg.first_point
+        print "End:", seg.last_point
+        for i in xrange(len(seg.model_params)):
+            print "  ", seg.param_names[i], ":", seg.model_params[i]
         print
     
-    GRAPH_ARTIC = False
+    GRAPH_ARTIC = True
     colors = []
-    choices = ['red','orange','yellow','green','blue','purple','black']
+    choices = ['red','green','blue','purple','black']
     i = 0
     for seg in resp.segments:
         colors += [choices[i]] * (seg.last_point - seg.first_point + 1) 
@@ -122,10 +146,16 @@ if __name__ == '__main__':
             if(seg.model_name == "rotational"):
                 p = Circle((0,0), params[0], facecolor = 'None', edgecolor = choices[i], alpha = .6)
                 ax.add_patch(p)
-                pathpatch_2d_to_3d(p, z = 0, normal = (0, 0, 1))
+                
+                q = (params[7], params[4], params[5], params[6])
+                v = (0,0,1) # The default norm of a circle that we want to rotate by q
+                qv = qv_mult(q,v)
+                
+                pathpatch_2d_to_3d(p, z=0, normal = qv)
                 pathpatch_translate(p, (params[1], params[2], params[3]))
+                
             if(seg.model_name == "prismatic"):
-                llen = 100
+                llen = 1
                 sx = params[0]
                 sy = params[1]
                 sz = params[2]

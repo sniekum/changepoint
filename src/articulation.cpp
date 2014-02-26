@@ -262,7 +262,7 @@ bool ArticulationFitter::fitSegment(double **data, const int start, const int en
     
     ap->params = &(gm->model);
     ap->logLikelihood = gm->getLogLikelihood(false);
-    double SEGMENTATION_PENALTY = 1000.0;
+    double SEGMENTATION_PENALTY = 500.0;
     ap->modelEvidence = (-(gm->getBIC())/ 2.0) - SEGMENTATION_PENALTY;  //Convert to form in Bishop that approximates model evidence
       
     return true;
