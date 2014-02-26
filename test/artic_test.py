@@ -88,7 +88,7 @@ def makeDetectRequest(traj):
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    f = open('bagfiles/2-21-14/diffpickle3', 'r')
+    f = open('bagfiles/2-21-14/diffpickle2', 'r')
     traj = pickle.load(f)
     
     #TODO: GET RID OF DATA WHEN NOT MOVING! (Have to do before taking diff...)
@@ -97,61 +97,10 @@ if __name__ == '__main__':
     Y = np.array([traj[i][1] for i in xrange(len(traj))])
     Z = np.array([traj[i][2] for i in xrange(len(traj))])
     
-    colors = []
-    colors += ['r']*14
-    colors += ['g']*26
-    #colors += ['b']*15
-    
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.set_aspect('equal')
-    ax.scatter(X,Y,Z, c=colors)
     
-    # Create cubic bounding box to simulate equal aspect ratio
-    max_range = np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
-    Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(X.max()+X.min())
-    Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(Y.max()+Y.min())
-    Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(Z.max()+Z.min())
-    for xb, yb, zb in zip(Xb, Yb, Zb):
-        ax.plot([xb], [yb], [zb], 'w')
-
-    #p = Circle((0,0), 9.424720, facecolor = 'None', edgecolor = 'r', alpha = .6)
-    #ax.add_patch(p)
-    #pathpatch_2d_to_3d(p, z = 0, normal = (0, 0, 1))
-    #pathpatch_translate(p, (0.500496, 0.326766, 0.093434))
-    
-    #llen = 100
-    #px = 9.505870 
-    #py = -0.041050
-    #pz = 0.006211 
-    #sx = -0.999897   
-    #sy = 0.013742   
-    #sz = 0.004071
-    #lx = [px-(sx*llen),px+(sx*llen)]
-    #ly = [py-(sy*llen),py+(sy*llen)]
-    #lz = [pz-(sz*llen),pz+(sz*llen)]
-    #ax.plot(lx,ly,lz, color='g', alpha=0.6)
-    
-    #p = Circle((0,0), 1.816539, facecolor = 'None', edgecolor = 'b', alpha = .6)
-    #ax.add_patch(p)
-    #pathpatch_2d_to_3d(p, z = 0, normal = (0, 0, 1))
-    #pathpatch_translate(p, (0.185348, 0.124114, -0.244365))
-           
-    #llen = 100
-    #px = 4.760337
-    #py = -0.031724
-    #pz = 0.004703 
-    #sx = -0.999792  
-    #sy = 0.018180  
-    #sz = -0.009205
-    #lx = [px-(sx*llen),px+(sx*llen)]
-    #ly = [py-(sy*llen),py+(sy*llen)]
-    #lz = [pz-(sz*llen),pz+(sz*llen)]
-    #ax.plot(lx,ly,lz, color='r', alpha=0.6)
-
-    
-    #ax.auto_scale_xyz([0, 5], [-2.5, 2.5], [-2.5, 2.5])
-    plt.show()   
     req = DetectChangepointsRequest()
     req.data = [DataPoint(x) for x in traj]
     resp = makeDetectRequest(req)
@@ -160,4 +109,43 @@ if __name__ == '__main__':
     for seg in resp.segments:
         print seg
         print
+    
+    GRAPH_ARTIC = False
+    colors = []
+    choices = ['red','orange','yellow','green','blue','purple','black']
+    i = 0
+    for seg in resp.segments:
+        colors += [choices[i]] * (seg.last_point - seg.first_point + 1) 
+        
+        if GRAPH_ARTIC:
+            params = seg.model_params
+            if(seg.model_name == "rotational"):
+                p = Circle((0,0), params[0], facecolor = 'None', edgecolor = choices[i], alpha = .6)
+                ax.add_patch(p)
+                pathpatch_2d_to_3d(p, z = 0, normal = (0, 0, 1))
+                pathpatch_translate(p, (params[1], params[2], params[3]))
+            if(seg.model_name == "prismatic"):
+                llen = 100
+                sx = params[0]
+                sy = params[1]
+                sz = params[2]
+                px = params[3]  
+                py = params[4]
+                pz = params[5]  
+                lx = [px-(sx*llen),px+(sx*llen)]
+                ly = [py-(sy*llen),py+(sy*llen)]
+                lz = [pz-(sz*llen),pz+(sz*llen)]
+                ax.plot(lx,ly,lz, color=choices[i], alpha=0.6)
+            
+        i = (i+1) % len(choices)
+    
+    #Create equal aspect ratio that is just large enough for all points
+    ax.scatter(X,Y,Z, c=colors)
+    max_range = max(X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min())
+    X_buffer = (max_range - (X.max()-X.min())) / 2.0
+    Y_buffer = (max_range - (Y.max()-Y.min())) / 2.0
+    Z_buffer = (max_range - (Z.max()-Z.min())) / 2.0
+    
+    ax.auto_scale_xyz([X.min()-X_buffer, X.max()+X_buffer], [Y.min()-Y_buffer, Y.max()+Y_buffer], [Z.min()-Z_buffer, Z.max()+Z_buffer])
+    plt.show()       
 

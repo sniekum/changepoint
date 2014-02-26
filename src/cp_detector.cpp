@@ -46,8 +46,8 @@
 #define LEN_MEAN 100.0                // Mean of segment length gaussian 
 #define LEN_SIG 1000.0                // Sigma of segment length gaussian
 #define MIN_SEG_LEN 30                // The minimum length of a segment for model fitting purposes
-#define MAX_PARTICLES 20              // The most particles to ever keep in the filter
-#define RESAMP_PARTICLES 20           // The number of particles to resample back down to when resampling 
+#define MAX_PARTICLES 10              // The most particles to ever keep in the filter
+#define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
 
 using namespace std;
 using namespace articulation_models;
@@ -263,7 +263,7 @@ vector<ModelSegment> CPDetector::detectChangepoints()
         if(t >= (2*MIN_SEG_LEN)-1){
             double prev = prev_max_MAP.front();
             prev_max_MAP.pop();
-            printf("Adding particles for p=%i with prev: %f\n",t-MIN_SEG_LEN,prev);
+            //printf("Adding particles for p=%i with prev: %f\n",t-MIN_SEG_LEN,prev);
             
             // Create new particles for a changepoint at time t-MIN_SEG_LEN, one for each model in Q
             for(int i=0; i<size_Q; i++){
@@ -296,7 +296,7 @@ vector<ModelSegment> CPDetector::detectChangepoints()
             else
                 p->MAP = p_tjq + logLenPDF(seg_len) - logOneMinLenCDF(seg_len-1);
             
-            printf("t %i   pos %i   model %s   ll %f   evi %f   tjq %f   map %f\n",t,p->pos,p->fit_params->getModelName().c_str(),p->fit_params->logLikelihood,p->fit_params->modelEvidence,p_tjq,p->MAP);
+            //printf("t %i   pos %i   model %s   ll %f   evi %f   tjq %f   map %f\n",t,p->pos,p->fit_params->getModelName().c_str(),p->fit_params->logLikelihood,p->fit_params->modelEvidence,p_tjq,p->MAP);
         
         }
                       

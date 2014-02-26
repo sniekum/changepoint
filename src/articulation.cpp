@@ -198,11 +198,11 @@ void ArticulationParams::fillParams(ModelSegment &seg)
     
 ArticulationFitter::ArticulationFitter(int model_id)
 {
-    double sigma_position = 0.01;
+    double sigma_position = 0.02;
     double sigma_orientation = M_PI/120.0;  // 3 degrees 
     double optimizer_iterations = 0;
     double sac_iterations = 20;
-    double outlier_ratio = 0.0;
+    double outlier_ratio = 0.1;
     
     std::string name;
     if(model_id == 0){
@@ -262,7 +262,8 @@ bool ArticulationFitter::fitSegment(double **data, const int start, const int en
     
     ap->params = &(gm->model);
     ap->logLikelihood = gm->getLogLikelihood(false);
-    ap->modelEvidence = -(gm->getBIC())/ 2.0;  //Convert to form in Bishop that approximates model evidence
+    double SEGMENTATION_PENALTY = 1000.0;
+    ap->modelEvidence = (-(gm->getBIC())/ 2.0) - SEGMENTATION_PENALTY;  //Convert to form in Bishop that approximates model evidence
       
     return true;
 }
