@@ -108,10 +108,10 @@ def makeDetectRequest(traj):
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    f = open('bagfiles/2-21-14/diffpickle4', 'r')
-    traj = pickle.load(f)
-    
-    #TODO: GET RID OF DATA WHEN NOT MOVING! (Have to do before taking diff...)
+    #f = open('bagfiles/2-27-14/diffpickle4.txt', 'r')
+    f = open('bagfiles/2-27-14/neg/ex6/diffpickle.txt', 'r')
+    [m0, m13, traj1, traj2] = pickle.load(f)
+    traj = traj1
     
     X = np.array([traj[i][0] for i in xrange(len(traj))])
     Y = np.array([traj[i][1] for i in xrange(len(traj))])
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 ax.add_patch(p)
                 
                 q = (params[7], params[4], params[5], params[6])
-                v = (0,0,1) # The default norm of a circle that we want to rotate by q
+                v = (0,0,1) # The default normal of a circle that we want to rotate by q
                 qv = qv_mult(q,v)
                 
                 pathpatch_2d_to_3d(p, z=0, normal = qv)
