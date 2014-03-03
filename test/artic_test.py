@@ -109,9 +109,9 @@ if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
     #f = open('bagfiles/2-27-14/diffpickle4.txt', 'r')
-    f = open('bagfiles/2-27-14/neg/ex6/diffpickle.txt', 'r')
-    [m0, m13, traj1, traj2] = pickle.load(f)
-    traj = traj1
+    f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
+    [m1, m2, traj1, traj2] = pickle.load(f)
+    traj = traj2
     
     X = np.array([traj[i][0] for i in xrange(len(traj))])
     Y = np.array([traj[i][1] for i in xrange(len(traj))])
