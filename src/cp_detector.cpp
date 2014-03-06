@@ -43,9 +43,9 @@
 #include "changepoint/gauss1D.h"
 
 #define SQRT2PI 2.50662827463
-#define LEN_MEAN 100.0                // Mean of segment length gaussian 
-#define LEN_SIG 1000.0                // Sigma of segment length gaussian
-#define MIN_SEG_LEN 20                // The minimum length of a segment for model fitting purposes
+#define LEN_MEAN 1000.0                // Mean of segment length gaussian 
+#define LEN_SIG 100.0                // Sigma of segment length gaussian
+#define MIN_SEG_LEN 10                // The minimum length of a segment for model fitting purposes
 #define MAX_PARTICLES 10              // The most particles to ever keep in the filter
 #define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
 

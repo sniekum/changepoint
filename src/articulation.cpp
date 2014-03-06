@@ -198,7 +198,7 @@ void ArticulationParams::fillParams(ModelSegment &seg)
     
 ArticulationFitter::ArticulationFitter(int model_id)
 {
-    double sigma_position = 0.02;
+    double sigma_position = 0.005;
     double sigma_orientation = M_PI/30.0;  
     double optimizer_iterations = 0;
     double sac_iterations = 50;
@@ -262,7 +262,10 @@ bool ArticulationFitter::fitSegment(double **data, const int start, const int en
     
     ap->params = &(gm->model);
     ap->logLikelihood = gm->getLogLikelihood(false);
-    double SEGMENTATION_PENALTY = 100.0;
+    // The advantage is that with time-based ones, num of CPs changes linearly with len of trajectory
+    // But with this, we can specify a small number of CPs no matter than traj length
+    // This can account for the fact that people demo at different speeds
+    double SEGMENTATION_PENALTY = 0.0;  // IS THIS JUST A PRIOR OVER A GEOM NUMBER OF TOTAL CHANGEPOINTS?
     ap->modelEvidence = (-(gm->getBIC())/ 2.0) - SEGMENTATION_PENALTY;  //Convert to form in Bishop that approximates model evidence
       
     return true;
