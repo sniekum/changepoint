@@ -198,7 +198,7 @@ void ArticulationParams::fillParams(ModelSegment &seg)
     
 ArticulationFitter::ArticulationFitter(int model_id)
 {
-    double sigma_position = 0.005;
+    double sigma_position = 0.02;
     double sigma_orientation = M_PI/30.0;  
     double optimizer_iterations = 0;
     double sac_iterations = 50;
