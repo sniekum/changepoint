@@ -203,7 +203,8 @@ ArticulationFitter::ArticulationFitter(int model_id)
     double sigma_orientation = M_PI/30.0;  
     double optimizer_iterations = 0;
     double sac_iterations = 50;
-    double outlier_ratio = 0.1;
+    double prior_outlier_ratio = log(0.01) / (- 0.05); 
+    //double outlier_ratio = 0.1;
     
     std::string name;
     if(model_id == 0){
@@ -228,7 +229,8 @@ ArticulationFitter::ArticulationFitter(int model_id)
     gm->sigma_orientation = sigma_orientation;
     gm->optimizer_iterations = optimizer_iterations;
     gm->sac_iterations = sac_iterations;
-    gm->outlier_ratio = outlier_ratio;
+    gm->prior_outlier_ratio = prior_outlier_ratio;
+    //gm->outlier_ratio = outlier_ratio;
 }
 
 
