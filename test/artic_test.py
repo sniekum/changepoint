@@ -108,22 +108,28 @@ def makeDetectRequest(traj):
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    #stapler ex3: traj=2, sigmas=0.02, pi/30, penalty=100, min=20 OR No penalty, but 1000/50 gauss time
-    f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
+    #Best overall params: sigmas=0.0075, pi/10, min=10, particles=10, 100/5 gauss time
+    #Stapler ex4 traj2
+    #Eraser ex6 traj2
+    #Table ex3 traj1 + filtering
     
-    #eraser ex6: traj=2, sigmas=0.005, pi/30, penalty=100, min=20
+    #f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
     #f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
-    
-    #table ex3: traj=1, sigmas=0.02, pi/30, penalty=100, min=20, thresh=0.15 or .12 for traj2
-    #f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
+    f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
     
     [m1, m2, traj1, traj2] = pickle.load(f)
-    traj = traj2
+    traj = traj1
     
     #Remove points before obj contact
-    #thresh = 0.15
-    #include = [np.fabs(x[2]) < thresh for x in traj]
-    #traj = [traj[i] for i in xrange(len(traj)) if include[i]==True]
+    thresh = 0.18
+    first = len(traj)
+    for i in xrange(len(traj)):
+        d = np.fabs(traj[i][0])*np.fabs(traj[i][0]) + np.fabs(traj[i][1])*np.fabs(traj[i][1]) + np.fabs(traj[i][2])*np.fabs(traj[i][2])
+        if np.sqrt(d) < thresh:
+            first = i
+            break
+    print "first: ", first
+    traj = traj[first:]
     
     X = np.array([traj[i][0] for i in xrange(len(traj))])
     Y = np.array([traj[i][1] for i in xrange(len(traj))])

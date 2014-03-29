@@ -200,11 +200,10 @@ void ArticulationParams::fillParams(ModelSegment &seg)
 ArticulationFitter::ArticulationFitter(int model_id)
 {
     double sigma_position = 0.0075;
-    double sigma_orientation = M_PI/30.0;  
+    double sigma_orientation = M_PI/10.0;  
     double optimizer_iterations = 0;
     double sac_iterations = 50;
     double prior_outlier_ratio = log(0.01) / (- 0.05); 
-    //double outlier_ratio = 0.1;
     
     std::string name;
     if(model_id == 0){
@@ -230,7 +229,6 @@ ArticulationFitter::ArticulationFitter(int model_id)
     gm->optimizer_iterations = optimizer_iterations;
     gm->sac_iterations = sac_iterations;
     gm->prior_outlier_ratio = prior_outlier_ratio;
-    //gm->outlier_ratio = outlier_ratio;
 }
 
 
@@ -264,7 +262,7 @@ bool ArticulationFitter::fitSegment(double **data, const int start, const int en
     }
     
     ap->params = &(gm->model);
-    ap->logLikelihood = gm->getLogLikelihood(false);
+    ap->logLikelihood = gm->getLogLikelihood(true);
     ap->modelEvidence = (-(gm->getBIC())/ 2.0); //Convert to form in Bishop that approximates model evidence
       
     return true;
