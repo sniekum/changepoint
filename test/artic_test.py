@@ -113,23 +113,23 @@ if __name__ == '__main__':
     #Eraser ex6 traj2
     #Table ex3 traj1 + filtering
     
-    #f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
+    f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
     #f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
-    f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
+    #f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
     
     [m1, m2, traj1, traj2] = pickle.load(f)
-    traj = traj1
+    traj = traj2
     
     #Remove points before obj contact
-    thresh = 0.18
-    first = len(traj)
-    for i in xrange(len(traj)):
-        d = np.fabs(traj[i][0])*np.fabs(traj[i][0]) + np.fabs(traj[i][1])*np.fabs(traj[i][1]) + np.fabs(traj[i][2])*np.fabs(traj[i][2])
-        if np.sqrt(d) < thresh:
-            first = i
-            break
-    print "first: ", first
-    traj = traj[first:]
+    #thresh = 0.18
+    #first = len(traj)
+    #for i in xrange(len(traj)):
+    #    d = np.fabs(traj[i][0])*np.fabs(traj[i][0]) + np.fabs(traj[i][1])*np.fabs(traj[i][1]) + np.fabs(traj[i][2])*np.fabs(traj[i][2])
+    #    if np.sqrt(d) < thresh:
+    #        first = i
+    #        break
+    #print "first: ", first
+    #traj = traj[first:]
     
     X = np.array([traj[i][0] for i in xrange(len(traj))])
     Y = np.array([traj[i][1] for i in xrange(len(traj))])
@@ -193,7 +193,20 @@ if __name__ == '__main__':
                 ly = [py-(sy*llen),py+(sy*llen)]
                 lz = [pz-(sz*llen),pz+(sz*llen)]
                 ax.plot(lx,ly,lz, color=choices[i], alpha=0.6)
-            
+                
+            if(seg.model_name == "rigid"):
+                rx = params[0]
+                ry = params[1]
+                rz = params[2]
+                rad = 0.0075 * 3 #3-sigma
+                
+                phi = np.linspace(0, 2 * np.pi, 100)
+                theta = np.linspace(0, np.pi, 100)
+                xm = rad * np.outer(np.cos(phi), np.sin(theta)) + rx
+                ym = rad * np.outer(np.sin(phi), np.sin(theta)) + ry
+                zm = rad * np.outer(np.ones(np.size(phi)), np.cos(theta)) + rz
+                ax.plot_surface(xm, ym, zm, color=choices[i], alpha=0.4, linewidth=0)
+                            
         i = (i+1) % len(choices)
     
     #Create equal aspect ratio that is just large enough for all points
@@ -202,7 +215,11 @@ if __name__ == '__main__':
     X_buffer = (max_range - (X.max()-X.min())) / 2.0
     Y_buffer = (max_range - (Y.max()-Y.min())) / 2.0
     Z_buffer = (max_range - (Z.max()-Z.min())) / 2.0
-    
     ax.auto_scale_xyz([X.min()-X_buffer, X.max()+X_buffer], [Y.min()-Y_buffer, Y.max()+Y_buffer], [Z.min()-Z_buffer, Z.max()+Z_buffer])
+    
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_zticklabels([])
+    
     plt.show()       
 
