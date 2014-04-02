@@ -40,6 +40,7 @@
 
 #include "changepoint/articulation.h"
 
+
 namespace changepoint{
 
     
@@ -194,30 +195,6 @@ void ArticulationParams::fillParams(ModelSegment &seg)
     }
 }
 
-
-std::vector< std::vector<double> >  ArticulationParams::calcFinalSegStats(double **data, const int start, const int end)
-{
-    std::vector< std::vector<double> > configurations;
-    std::vector<double> curr_config;
-    
-    /*
-    for(int i=start+1; i<=end; i++){
-        geometry_msgs::Pose temp;
-        temp.position.x = data[i][0];
-        temp.position.y = data[i][1];
-        temp.position.z = data[i][2];
-        temp.orientation.x = data[i][3];
-        temp.orientation.y = data[i][4];
-        temp.orientation.z = data[i][5];
-        temp.orientation.w = data[i][6];
-        
-        curr_config = predictConfiguration(temp);
-        configurations.push_back(curr_config);
-    }
-    */
-    
-    return configurations;
-}
     
 //*****************************************************************************************************    
     
@@ -263,14 +240,14 @@ ArticulationFitter::ArticulationFitter(int model_id)
 ArticulationFitter::ArticulationFitter(ModelFitter *rhs){
     ArticulationFitter *af = static_cast<ArticulationFitter*>(rhs);
     
-    std::string name;
-    if(af->m_id == 0){
+    m_id = af->m_id;
+    if(m_id == 0){
         gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::RigidModel());
     }
-    else if(af->m_id == 1){
+    else if(m_id == 1){
         gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::PrismaticModel());    
     }
-    else if(af->m_id == 2){
+    else if(m_id == 2){
         gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::RotationalModel());
     }
     else{
@@ -287,6 +264,8 @@ ArticulationFitter::ArticulationFitter(ModelFitter *rhs){
     
     articulation_msgs::ModelMsg mm = af->gm->getModel();
     gm->setModel(mm);
+    articulation_msgs::TrackMsg tm = af->gm->getTrack();
+    gm->setTrack(tm);
     
     mp = new ArticulationParams(af->mp); 
 }
@@ -326,6 +305,43 @@ bool ArticulationFitter::fitSegment(double **data, const int start, const int en
     ap->modelEvidence = (-(gm->getBIC())/ 2.0); //Convert to form in Bishop that approximates model evidence
       
     return true;
+}
+
+
+std::vector< std::vector<double> >  ArticulationFitter::calcFinalSegStats(double **data, const int start, const int end)
+{
+    // Do BFGS optimization of params, since these are the final segments
+    gm->optimizer_iterations = 10;
+    gm->optimizeParameters();
+    gm->normalizeParameters();
+    
+    // Project relative pose onto model to get estimated configuration for rot and pris joints
+    std::vector< std::vector<double> > configurations;
+    std::vector<double> curr_config;
+    
+    for(int i=start+1; i<=end; i++){
+        geometry_msgs::Pose temp;
+        temp.position.x = data[i][0];
+        temp.position.y = data[i][1];
+        temp.position.z = data[i][2];
+        temp.orientation.x = data[i][3];
+        temp.orientation.y = data[i][4];
+        temp.orientation.z = data[i][5];
+        temp.orientation.w = data[i][6];
+        
+        curr_config.clear();
+        if(m_id==1 || m_id==2){
+            double q;
+            q = (gm->predictConfiguration(temp))(0);
+            curr_config.push_back(q);
+        }
+        else{
+            curr_config.push_back(0.0);
+        }
+        configurations.push_back(curr_config);
+    }
+    
+    return configurations;
 }
 
 } // end namespace

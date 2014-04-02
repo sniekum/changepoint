@@ -40,6 +40,7 @@
 
 #include "changepoint/gauss1D.h"
 
+
 namespace changepoint{
 
  

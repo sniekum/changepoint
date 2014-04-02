@@ -59,9 +59,7 @@ public:
     virtual void printParams() = 0;
     virtual void fillParams(ModelSegment &seg) = 0;
     virtual std::string getModelName() = 0;
-    // Calculates arbitrary model-specific stats for a specified data segment under the current model
-    virtual std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end) = 0;
-
+    
     double getModelEvidence(){return modelEvidence;}
     double getLogLikelihood(){return logLikelihood;}
     
@@ -77,8 +75,9 @@ public:
     
     // Fit a model to the segment of start+1 to end. Params+BIC+LL in mp should be filled by fit.
     virtual bool fitSegment(double **data, const int start, const int end) = 0;
-    virtual int nModels() = 0;  // Returns number of model types for this set of models
-
+    virtual int nModels() = 0;  // Returns number of model types for this set of models    
+    // Calculates arbitrary model-specific stats for a specified data segment under the current model
+    virtual std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end) = 0;
     
     ModelParams *mp;
 };

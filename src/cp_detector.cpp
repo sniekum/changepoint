@@ -339,12 +339,20 @@ vector<ModelSegment> CPDetector::detectChangepoints()
              << "   len: " << (curr_cp - (max_path_indices[path_index])) << "\n", 
         max_path_models[path_index]->mp->printParams(); 
         
+        // Compute stats on each final segment
+        std::vector< std::vector<double> > stats = max_path_models[path_index]->calcFinalSegStats(data,max_path_indices[path_index],curr_cp);
+        
         // Add a ModelSegment for the ROS message response
         ModelSegment temp;
         temp.model_name = max_path_models[path_index]->mp->getModelName();
         temp.first_point = max_path_indices[path_index]+1;
         temp.last_point = curr_cp;
         max_path_models[path_index]->mp->fillParams(temp);
+        for(size_t i=0; i<stats.size(); i++){
+            DataPoint dp;
+            dp.point = stats[i];
+            temp.seg_stats.push_back(dp);
+        }
         segments.insert(segments.begin(), temp);
         
         // Go to previous CP in chain

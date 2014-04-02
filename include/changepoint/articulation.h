@@ -71,7 +71,6 @@ public:
     std::string getModelName();
     void printParams();
     void fillParams(ModelSegment &seg);
-    std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end);
     
     articulation_msgs::ModelMsg *params;
     
@@ -88,7 +87,8 @@ public:
     
     bool fitSegment(double **data, const int start, const int end);
     int nModels(){return 3;}
-    
+    std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end);
+
     boost::shared_ptr<articulation_models::GenericModel> gm; 
     int m_id;
 };

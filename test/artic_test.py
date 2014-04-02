@@ -162,6 +162,8 @@ if __name__ == '__main__':
         for i in xrange(len(seg.model_params)):
             print "  ", seg.param_names[i], ":", seg.model_params[i]
         print
+        #for p in seg.seg_stats:
+        #    print p.point
     
     GRAPH_ARTIC = True
     colors = []

@@ -63,11 +63,6 @@ public:
     std::string getModelName();
     void printParams();
     void fillParams(ModelSegment &seg);
-    std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end)
-    {
-        std::vector< std::vector<double> > empty;
-        return empty;
-    };
 
     double mu, sigma;
 };
@@ -84,6 +79,11 @@ public:
     
     bool fitSegment(double **data, const int start, const int end);
     int nModels(){return 1;}
+    std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end)
+    {
+        std::vector< std::vector<double> > empty;
+        return empty;
+    }
 
 };
 
