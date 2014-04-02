@@ -60,21 +60,31 @@ public:
         modelEvidence = gp->modelEvidence;
     }
     
-    int nModels(){return 1;}
     std::string getModelName();
     void printParams();
     void fillParams(ModelSegment &seg);
-    
+    std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end)
+    {
+        std::vector< std::vector<double> > empty;
+        return empty;
+    };
+
     double mu, sigma;
 };
 
 
 class Gauss1DFitter : public ModelFitter{
 public:
-    Gauss1DFitter(int model_id){};
-    ~Gauss1DFitter(){};
+    Gauss1DFitter(int model_id){mp = new Gauss1DParams();}
+    ~Gauss1DFitter(){delete mp;}
+    Gauss1DFitter(ModelFitter *rhs){
+        Gauss1DFitter *gf = static_cast<Gauss1DFitter*>(rhs);
+        mp = new Gauss1DParams(gf->mp);
+    }
     
-    bool fitSegment(double **data, const int start, const int end, ModelParams *mp);
+    bool fitSegment(double **data, const int start, const int end);
+    int nModels(){return 1;}
+
 };
 
 } // end namespace

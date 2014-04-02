@@ -38,9 +38,7 @@ def rotation_matrix(d):
                   [d[1], -d[0],    0]], dtype=np.float64)
 
     M = ddt + np.sqrt(1 - sin_angle**2) * (eye - ddt) + sin_angle * skew
-    return M
-
-    
+    return M   
 def pathpatch_2d_to_3d(pathpatch, z = 0, normal = 'z'):
     """
     Transforms a 2D Patch to a 3D patch using the given normal vector.
@@ -68,20 +66,15 @@ def pathpatch_2d_to_3d(pathpatch, z = 0, normal = 'z'):
     d = np.cross(normal, (0, 0, 1)) #Obtain the rotation vector    
     M = rotation_matrix(d) #Get the rotation matrix
 
-    pathpatch._segment3d = np.array([np.dot(M, (x, y, 0)) + (0, 0, z) for x, y in verts])
-
-    
+    pathpatch._segment3d = np.array([np.dot(M, (x, y, 0)) + (0, 0, z) for x, y in verts])   
 def pathpatch_translate(pathpatch, delta):
     """
     Translates the 3D pathpatch by the amount delta.
     """
-    pathpatch._segment3d += delta
-
-    
+    pathpatch._segment3d += delta   
 def q_conjugate(q):
     w, x, y, z = q
     return (w, -x, -y, -z)
-
 def q_mult(q1, q2):
     w1, x1, y1, z1 = q1
     w2, x2, y2, z2 = q2
@@ -89,13 +82,11 @@ def q_mult(q1, q2):
     x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
     y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
     z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-    return w, x, y, z    
-    
+    return w, x, y, z       
 def qv_mult(q1, v1):
     q2 = (0.0,) + v1
     return q_mult(q_mult(q1, q2), q_conjugate(q1))[1:]
-    
-    
+      
 def makeDetectRequest(traj):
     try:
         dc = rospy.ServiceProxy('changepoint/detect_changepoints', DetectChangepoints)
@@ -104,6 +95,17 @@ def makeDetectRequest(traj):
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
+        
+def causalDetection(segments, data):
+    epsilon = 10  #Number of data points before CP to check
+        
+    seg = segments[0]
+    pre_data = data[seg.first_point : seg.last_point - epsilon]
+    eps_data = data[seg.last_point - epsilon : seg.last_point]
+    
+    #Look for estimated configuration q (Sturm's notation) that happens in eps, but never in pre
+    #Need to include est. config for each data point in returned message
+        
         
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
@@ -163,7 +165,7 @@ if __name__ == '__main__':
     
     GRAPH_ARTIC = True
     colors = []
-    choices = ['red','green','blue','purple','black']
+    choices = ['red','green','blue','purple','yellow','black']
     i = 0
     for seg in resp.segments:
         colors += [choices[i]] * (seg.last_point - seg.first_point + 1) 

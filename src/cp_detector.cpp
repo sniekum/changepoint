@@ -55,10 +55,8 @@ using namespace articulation_msgs;
 
 namespace changepoint{
     
-// Choose which model(s) and fitter(s) to use 
-//typedef Gauss1DParams ParamsType;
+// Choose which set of models/fitters to use 
 //typedef Gauss1DFitter FitterType;
-typedef ArticulationParams ParamsType;
 typedef ArticulationFitter FitterType;
 
     
@@ -239,23 +237,22 @@ void CPDetector::resampleParticles(int max_particles, int resamp_particles)
 vector<ModelSegment> CPDetector::detectChangepoints()
 {   
     srand(time(0));
-    ParamsType temp;
-    int size_Q = temp.nModels();  // The number of models
+    FitterType temp(0);
+    int size_Q = temp.nModels();      // The number of models
     double max_MAP = log(1.0 / size_Q);    
     double l_prior = max_MAP;         // A uniform prior for all models
     
     //Initialize particle filter and viterbi stats
     particles.clear();
     for(int i=0; i<size_Q; i++){
-        ParamsType *mp = new ParamsType();
         FitterType *mf = new FitterType(i);
-        particles.push_back(*(new Particle(max_MAP,-1,*mp,*mf))); 
+        particles.push_back(*(new Particle(max_MAP,-1,*mf))); 
     }
     vector<int> max_path_indices;
-    vector<ParamsType*> max_path_models;
+    vector<FitterType*> max_path_models;
     prev_max_MAP = queue<double>();
     
-    // Process each time step from perspective of changepoints *BEFORE* time t
+    // Process each time step, approximating the distribution of the most recent changepoint *BEFORE* time t
     // NOTE: By starting at MIN_SEG_LEN-1, we ensure the first segment will be >= MIN_SEG_LEN
     for(int t=MIN_SEG_LEN-1; t<d_len; t++)
     {   
@@ -267,9 +264,8 @@ vector<ModelSegment> CPDetector::detectChangepoints()
             
             // Create new particles for a changepoint at time t-MIN_SEG_LEN, one for each model in Q
             for(int i=0; i<size_Q; i++){
-                ParamsType *mp = new ParamsType();
                 FitterType *mf = new FitterType(i);
-                Particle *new_p = new Particle(prev,t-MIN_SEG_LEN,*mp,*mf);
+                Particle *new_p = new Particle(prev,t-MIN_SEG_LEN,*mf);
                 particles.push_back(*new_p);
             }
         }
@@ -280,12 +276,12 @@ vector<ModelSegment> CPDetector::detectChangepoints()
             int seg_len = t-p->pos;
                         
             // Fit the model and calc the data likelihood
-            p->fitter->fitSegment(data, p->pos, t, p->fit_params);   
+            p->fitter->fitSegment(data, p->pos, t);   
             
             // p_tjq is the prob of the CP **PRIOR** to time t occuring at j (p_pos)
             // p->MAP is the prob of the MAP CP occuring at time j (p_pos)
             double p_tjq;
-            double p_ME = p->fit_params->getModelEvidence();
+            double p_ME = p->fitter->mp->getModelEvidence();
             if(isnan(p_ME) || p_ME == -INFINITY)
                 p_tjq = -INFINITY;
             else
@@ -312,10 +308,10 @@ vector<ModelSegment> CPDetector::detectChangepoints()
         if(max_particle != NULL){
             max_MAP = max_particle->MAP;
             max_path_indices.push_back(max_particle->pos);
-            ParamsType *copy_model = new ParamsType(max_particle->fit_params);
+            FitterType *copy_model = new FitterType(max_particle->fitter);
             max_path_models.push_back(copy_model);
             cout << "MAX " << t << "  pos: " << max_particle->pos 
-                 << "  model: " << max_particle->fit_params->getModelName() 
+                 << "  model: " << max_particle->fitter->mp->getModelName() 
                  << "  map: " << max_particle->MAP << "\n\n";
         }
         else{
@@ -331,9 +327,7 @@ vector<ModelSegment> CPDetector::detectChangepoints()
     }
     
     
-    // Now max_path contains the final path, so trace it
-    //TODO: Re-evaluate model parameters for each segment, this time using optimization iterations?
-    //TODO: Maybe also merge neighboring segments that have same model and nearly identical parameters?
+    // Now max_path contains the final path, so trace it    
     int curr_cp = d_len - 1;
     int path_index = curr_cp - MIN_SEG_LEN + 1;  //This isn't a CP number, but an index into the max_path
     vector<ModelSegment> segments; 
@@ -341,16 +335,16 @@ vector<ModelSegment> CPDetector::detectChangepoints()
     printf("\nFINAL CHANGEPOINTS:\n");
     while(curr_cp > -1){
         // Print CP info
-        cout << "start: " << (max_path_indices[path_index]+1) <<  "   model: " << (max_path_models[path_index]->getModelName()) 
+        cout << "start: " << (max_path_indices[path_index]+1) <<  "   model: " << (max_path_models[path_index]->mp->getModelName()) 
              << "   len: " << (curr_cp - (max_path_indices[path_index])) << "\n", 
-        max_path_models[path_index]->printParams(); 
+        max_path_models[path_index]->mp->printParams(); 
         
         // Add a ModelSegment for the ROS message response
         ModelSegment temp;
-        temp.model_name = max_path_models[path_index]->getModelName();
+        temp.model_name = max_path_models[path_index]->mp->getModelName();
         temp.first_point = max_path_indices[path_index]+1;
         temp.last_point = curr_cp;
-        max_path_models[path_index]->fillParams(temp);
+        max_path_models[path_index]->mp->fillParams(temp);
         segments.insert(segments.begin(), temp);
         
         // Go to previous CP in chain

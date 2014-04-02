@@ -59,7 +59,9 @@ public:
     virtual void printParams() = 0;
     virtual void fillParams(ModelSegment &seg) = 0;
     virtual std::string getModelName() = 0;
-    virtual int nModels() = 0;  // Returns number of model types for this set fo models
+    // Calculates arbitrary model-specific stats for a specified data segment under the current model
+    virtual std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end) = 0;
+
     double getModelEvidence(){return modelEvidence;}
     double getLogLikelihood(){return logLikelihood;}
     
@@ -73,9 +75,12 @@ public:
     ModelFitter(){};
     virtual ~ModelFitter(){};
     
-    // Fit a model to the segment of start+1 to end. 
-    //Model type is specified by mp that is passed in, and params+BIC+LL in mp should be filled by fit.
-    virtual bool fitSegment(double **data, const int start, const int end, ModelParams *mp) = 0;
+    // Fit a model to the segment of start+1 to end. Params+BIC+LL in mp should be filled by fit.
+    virtual bool fitSegment(double **data, const int start, const int end) = 0;
+    virtual int nModels() = 0;  // Returns number of model types for this set of models
+
+    
+    ModelParams *mp;
 };
 
 
@@ -83,12 +88,11 @@ class Particle
 {
 public:
     Particle(){};
-    Particle(double prev_MAP, int pos, ModelParams &mp, ModelFitter &mf){
+    Particle(double prev_MAP, int pos, ModelFitter &mf){
         this->prev_MAP = prev_MAP;
         this->pos = pos;
         MAP = -INFINITY;
         nMAP = -INFINITY;
-        fit_params = &mp;
         fitter = &mf;
     }
     ~Particle(){};
@@ -97,7 +101,6 @@ public:
     double nMAP;
     double prev_MAP;
     int pos;
-    ModelParams *fit_params;
     ModelFitter *fitter;
 };
 

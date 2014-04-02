@@ -193,6 +193,31 @@ void ArticulationParams::fillParams(ModelSegment &seg)
         seg.model_params.push_back(modelEvidence);
     }
 }
+
+
+std::vector< std::vector<double> >  ArticulationParams::calcFinalSegStats(double **data, const int start, const int end)
+{
+    std::vector< std::vector<double> > configurations;
+    std::vector<double> curr_config;
+    
+    /*
+    for(int i=start+1; i<=end; i++){
+        geometry_msgs::Pose temp;
+        temp.position.x = data[i][0];
+        temp.position.y = data[i][1];
+        temp.position.z = data[i][2];
+        temp.orientation.x = data[i][3];
+        temp.orientation.y = data[i][4];
+        temp.orientation.z = data[i][5];
+        temp.orientation.w = data[i][6];
+        
+        curr_config = predictConfiguration(temp);
+        configurations.push_back(curr_config);
+    }
+    */
+    
+    return configurations;
+}
     
 //*****************************************************************************************************    
     
@@ -205,8 +230,9 @@ ArticulationFitter::ArticulationFitter(int model_id)
     double sac_iterations = 50;
     double prior_outlier_ratio = log(0.01) / (- 0.05); 
     
-    std::string name;
-    if(model_id == 0){
+    m_id = model_id;
+    
+    std::string name;if(model_id == 0){
         name = "rigid";
         gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::RigidModel());
     }
@@ -229,10 +255,44 @@ ArticulationFitter::ArticulationFitter(int model_id)
     gm->optimizer_iterations = optimizer_iterations;
     gm->sac_iterations = sac_iterations;
     gm->prior_outlier_ratio = prior_outlier_ratio;
+
+    mp = new ArticulationParams();
 }
 
 
-bool ArticulationFitter::fitSegment(double **data, const int start, const int end, ModelParams *mp)
+ArticulationFitter::ArticulationFitter(ModelFitter *rhs){
+    ArticulationFitter *af = static_cast<ArticulationFitter*>(rhs);
+    
+    std::string name;
+    if(af->m_id == 0){
+        gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::RigidModel());
+    }
+    else if(af->m_id == 1){
+        gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::PrismaticModel());    
+    }
+    else if(af->m_id == 2){
+        gm = boost::shared_ptr<articulation_models::GenericModel>(new articulation_models::RotationalModel());
+    }
+    else{
+        std::cout << "ModelFitter: Non-recognized model type " << m_id << "\n";
+        return;
+    }
+    
+    gm->model.name = af->gm->model.name;
+    gm->sigma_position = af->gm->sigma_position;
+    gm->sigma_orientation = af->gm->sigma_orientation;
+    gm->optimizer_iterations = af->gm->optimizer_iterations;
+    gm->sac_iterations = af->gm->sac_iterations;
+    gm->prior_outlier_ratio = af->gm->prior_outlier_ratio;
+    
+    articulation_msgs::ModelMsg mm = af->gm->getModel();
+    gm->setModel(mm);
+    
+    mp = new ArticulationParams(af->mp); 
+}
+
+
+bool ArticulationFitter::fitSegment(double **data, const int start, const int end)
 {   
     ArticulationParams *ap = static_cast<ArticulationParams*>(mp);
     

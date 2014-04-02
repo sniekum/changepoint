@@ -71,7 +71,7 @@ void Gauss1DParams::fillParams(ModelSegment &seg)
 //***************************************************************************************************************    
     
     
-bool Gauss1DFitter::fitSegment(double **data, const int start, const int end, ModelParams *mp)
+bool Gauss1DFitter::fitSegment(double **data, const int start, const int end)
 {    
     Gauss1DParams *gp = static_cast<Gauss1DParams*>(mp);
     
