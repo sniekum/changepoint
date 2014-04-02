@@ -96,15 +96,22 @@ def makeDetectRequest(traj):
         print "Service call failed: %s"%e
 
         
-def causalDetection(segments, data):
+def causalDetection(data):
     epsilon = 10  #Number of data points before CP to check
         
-    seg = segments[0]
-    pre_data = data[seg.first_point : seg.last_point - epsilon]
-    eps_data = data[seg.last_point - epsilon : seg.last_point]
+    pre_data = data[0 : -epsilon]
+    eps_data = data[-epsilon :]
     
-    #Look for estimated configuration q (Sturm's notation) that happens in eps, but never in pre
-    #Need to include est. config for each data point in returned message
+    #Look for estimated configuration range q (Sturm's notation) that happens in eps, but is disjoint from pre
+    unique = []
+    pre_min = min(pre_data)
+    pre_max = max(pre_data)
+    
+    for x in eps_data:
+        if x < min or x > max:
+            unique.append(x)
+            
+    return unique
         
         
 if __name__ == '__main__':
@@ -162,8 +169,15 @@ if __name__ == '__main__':
         for i in xrange(len(seg.model_params)):
             print "  ", seg.param_names[i], ":", seg.model_params[i]
         print
-        #for p in seg.seg_stats:
-        #    print p.point
+        
+    first_seg = resp.segments[0]
+    stats = first_seg.seg_stats
+    configs = [stats[i].point[0] for i in xrange(len(stats))]
+    print "Configs:"
+    print configs
+    print
+    print "Causal:"
+    print causalDetection(configs)
     
     GRAPH_ARTIC = True
     colors = []
