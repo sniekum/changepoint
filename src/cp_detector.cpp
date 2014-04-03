@@ -327,7 +327,7 @@ vector<ModelSegment> CPDetector::detectChangepoints()
     }
     
     
-    // Now max_path contains the final path, so trace it    
+    // Now max_path contains the final viterbi path, so trace it    
     int curr_cp = d_len - 1;
     int path_index = curr_cp - MIN_SEG_LEN + 1;  //This isn't a CP number, but an index into the max_path
     vector<ModelSegment> segments; 

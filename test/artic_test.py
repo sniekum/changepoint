@@ -122,8 +122,8 @@ if __name__ == '__main__':
     #Eraser ex6 traj2
     #Table ex3 traj1 + filtering
     
-    f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
-    #f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
+    #f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
+    f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
     #f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
     
     [m1, m2, traj1, traj2] = pickle.load(f)
