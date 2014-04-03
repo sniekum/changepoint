@@ -70,13 +70,14 @@ public:
 
 class Gauss1DFitter : public ModelFitter{
 public:
-    Gauss1DFitter(int model_id){mp = new Gauss1DParams();}
+    Gauss1DFitter(){};
     ~Gauss1DFitter(){delete mp;}
-    Gauss1DFitter(ModelFitter *rhs){
+    
+    void initialize(int model_id){mp = new Gauss1DParams();}
+    void copyFrom(ModelFitter *rhs){
         Gauss1DFitter *gf = static_cast<Gauss1DFitter*>(rhs);
         mp = new Gauss1DParams(gf->mp);
     }
-    
     bool fitSegment(double **data, const int start, const int end);
     int nModels(){return 1;}
     std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end)

@@ -70,9 +70,11 @@ public:
 
 class ModelFitter{
 public:    
-    ModelFitter(){};
+    ModelFitter(){mp=NULL;}
     virtual ~ModelFitter(){};
     
+    virtual void initialize(int model_id) = 0;
+    virtual void copyFrom(ModelFitter *rhs) = 0;
     // Fit a model to the segment of start+1 to end. Params+BIC+LL in mp should be filled by fit.
     virtual bool fitSegment(double **data, const int start, const int end) = 0;
     virtual int nModels() = 0;  // Returns number of model types for this set of models    
@@ -109,7 +111,7 @@ class CPDetector
 public:
     CPDetector(const std::vector<changepoint::DataPoint> data_pts);
     ~CPDetector();
-    std::vector<ModelSegment> detectChangepoints();
+    std::vector<ModelSegment> detectChangepoints(std::string class_type);
     
 private:
     int d_len, d_dim;

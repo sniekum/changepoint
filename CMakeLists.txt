@@ -35,7 +35,11 @@ include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
 #rosbuild_add_boost_directories()
-rosbuild_add_library(changepoint src/cp_detector.cpp src/articulation.cpp src/gauss1D.cpp)
+
+rosbuild_add_library(ArticulationFitter src/articulation.cpp) 
+rosbuild_add_library(Gauss1DFitter src/gauss1D.cpp) 
+rosbuild_add_library(changepoint src/cp_detector.cpp)
+
 rosbuild_add_executable(changepoint_server nodes/changepoint_server.cpp)
 target_link_libraries(changepoint_server changepoint)
 #rosbuild_link_boost(changepoint multiprecision)

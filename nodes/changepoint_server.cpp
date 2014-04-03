@@ -50,7 +50,7 @@ bool detectCallback(DetectChangepoints::Request &req,
 {
     printf("\nReceived request of size: %i\n", req.data.size());
     CPDetector *det = new CPDetector(req.data);
-    res.segments = det->detectChangepoints();
+    res.segments = det->detectChangepoints(req.model_type);
     delete det;
     return true;
 }

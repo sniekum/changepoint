@@ -41,6 +41,8 @@
 #include "changepoint/cp_detector.h"
 #include "changepoint/articulation.h"
 #include "changepoint/gauss1D.h"
+#include <pluginlib/class_loader.h>
+
 
 #define SQRT2PI 2.50662827463
 #define LEN_MEAN 100.0                // Mean of segment length gaussian 
@@ -55,11 +57,22 @@ using namespace articulation_msgs;
 
 namespace changepoint{
     
-// Choose which set of models/fitters to use 
-//typedef Gauss1DFitter FitterType;
-typedef ArticulationFitter FitterType;
+        
+pluginlib::ClassLoader<ModelFitter> c_loader("changepoint", "changepoint::ModelFitter");
 
+bool createHelper(string class_type, ModelFitter* &c)
+{
+    try{
+        c = c_loader.createClassInstance(class_type);
+    }
+    catch(pluginlib::PluginlibException& ex){
+        ROS_ERROR("Classifer plugin failed to load! Error: %s", ex.what());
+    }
     
+    return true;
+}
+
+     
 CPDetector::CPDetector(const vector<DataPoint> data_pts)
 {
     d_len = data_pts.size();
@@ -234,22 +247,27 @@ void CPDetector::resampleParticles(int max_particles, int resamp_particles)
     }    
 }
 
-vector<ModelSegment> CPDetector::detectChangepoints()
+vector<ModelSegment> CPDetector::detectChangepoints(string class_type)
 {   
     srand(time(0));
-    FitterType temp(0);
-    int size_Q = temp.nModels();      // The number of models
+    ModelFitter *temp;
+    createHelper(class_type, temp);
+    int size_Q = temp->nModels();      // The number of models
+    delete temp;
+    
     double max_MAP = log(1.0 / size_Q);    
     double l_prior = max_MAP;         // A uniform prior for all models
     
     //Initialize particle filter and viterbi stats
     particles.clear();
     for(int i=0; i<size_Q; i++){
-        FitterType *mf = new FitterType(i);
+        ModelFitter *mf;
+        createHelper(class_type, mf);
+        mf->initialize(i);
         particles.push_back(*(new Particle(max_MAP,-1,*mf))); 
     }
     vector<int> max_path_indices;
-    vector<FitterType*> max_path_models;
+    vector<ModelFitter*> max_path_models;
     prev_max_MAP = queue<double>();
     
     // Process each time step, approximating the distribution of the most recent changepoint *BEFORE* time t
@@ -264,7 +282,9 @@ vector<ModelSegment> CPDetector::detectChangepoints()
             
             // Create new particles for a changepoint at time t-MIN_SEG_LEN, one for each model in Q
             for(int i=0; i<size_Q; i++){
-                FitterType *mf = new FitterType(i);
+                ModelFitter *mf;
+                createHelper(class_type, mf);
+                mf->initialize(i);
                 Particle *new_p = new Particle(prev,t-MIN_SEG_LEN,*mf);
                 particles.push_back(*new_p);
             }
@@ -308,7 +328,9 @@ vector<ModelSegment> CPDetector::detectChangepoints()
         if(max_particle != NULL){
             max_MAP = max_particle->MAP;
             max_path_indices.push_back(max_particle->pos);
-            FitterType *copy_model = new FitterType(max_particle->fitter);
+            ModelFitter *copy_model;
+            createHelper(class_type, copy_model);
+            copy_model->copyFrom(max_particle->fitter);
             max_path_models.push_back(copy_model);
             cout << "MAX " << t << "  pos: " << max_particle->pos 
                  << "  model: " << max_particle->fitter->mp->getModelName() 

@@ -39,6 +39,9 @@
   */
 
 #include "changepoint/articulation.h"
+#include <pluginlib/class_list_macros.h>
+
+PLUGINLIB_DECLARE_CLASS(changepoint, ArticulationFitter, changepoint::ArticulationFitter, changepoint::ModelFitter)
 
 
 namespace changepoint{
@@ -199,7 +202,7 @@ void ArticulationParams::fillParams(ModelSegment &seg)
 //*****************************************************************************************************    
     
     
-ArticulationFitter::ArticulationFitter(int model_id)
+void ArticulationFitter::initialize(int model_id)
 {
     double sigma_position = 0.0075;
     double sigma_orientation = M_PI/12.0;  
@@ -237,7 +240,7 @@ ArticulationFitter::ArticulationFitter(int model_id)
 }
 
 
-ArticulationFitter::ArticulationFitter(ModelFitter *rhs){
+void ArticulationFitter::copyFrom(ModelFitter *rhs){
     ArticulationFitter *af = static_cast<ArticulationFitter*>(rhs);
     
     m_id = af->m_id;

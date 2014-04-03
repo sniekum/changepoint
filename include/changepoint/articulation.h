@@ -81,10 +81,11 @@ private:
 
 class ArticulationFitter : public ModelFitter{
 public:
-    ArticulationFitter(int model_id);
-    ~ArticulationFitter(){delete mp;}
-     ArticulationFitter(ModelFitter *rhs);
+    ArticulationFitter(){};
+    ~ArticulationFitter(){if(mp!=NULL) delete mp;}
     
+    void initialize(int model_id);
+    void copyFrom(ModelFitter *rhs); 
     bool fitSegment(double **data, const int start, const int end);
     int nModels(){return 3;}
     std::vector< std::vector<double> > calcFinalSegStats(double **data, const int start, const int end);

@@ -39,6 +39,9 @@
   */
 
 #include "changepoint/gauss1D.h"
+#include <pluginlib/class_list_macros.h>
+
+PLUGINLIB_DECLARE_CLASS(changepoint, Gauss1DFitter, changepoint::Gauss1DFitter, changepoint::ModelFitter)
 
 
 namespace changepoint{

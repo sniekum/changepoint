@@ -1,4 +1,5 @@
 DataPoint[] data
+string model_type
 ---
 ModelSegment[] segments
 

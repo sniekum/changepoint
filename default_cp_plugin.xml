@@ -1,0 +1,16 @@
+<class_libraries>
+  <library path="lib/libArticulationFitter">
+    <class name="changepoint/ArticulationFitter" type="changepoint::ArticulationFitter" base_class_type="changepoint::ModelFitter">
+      <description>
+        Models rigid, prismatic, and revolute articulated motion
+      </description>
+    </class>
+  </library>
+  <library path="lib/libGauss1DFitter">
+    <class name="changepoint/Gauss1DFitter" type="changepoint::Gauss1DFitter" base_class_type="changepoint::ModelFitter">
+      <description>
+        Models Gaussian mean and vairance in 1D
+      </description>
+    </class>
+  </library>
+</class_libraries>

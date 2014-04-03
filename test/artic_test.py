@@ -87,10 +87,10 @@ def qv_mult(q1, v1):
     q2 = (0.0,) + v1
     return q_mult(q_mult(q1, q2), q_conjugate(q1))[1:]
       
-def makeDetectRequest(traj):
+def makeDetectRequest(req):
     try:
-        dc = rospy.ServiceProxy('changepoint/detect_changepoints', DetectChangepoints)
-        resp = dc(traj)
+        dc = rospy.ServiceProxy('changepoint/detect_changepoints', DetectChangepoints)  
+        resp = dc(req)
         return resp
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
@@ -122,8 +122,8 @@ if __name__ == '__main__':
     #Eraser ex6 traj2
     #Table ex3 traj1 + filtering
     
-    #f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
-    f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
+    f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
+    #f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
     #f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
     
     [m1, m2, traj1, traj2] = pickle.load(f)
@@ -159,6 +159,7 @@ if __name__ == '__main__':
     
     req = DetectChangepointsRequest()
     req.data = [DataPoint(x) for x in traj]
+    req.model_type = 'changepoint/ArticulationFitter'
     resp = makeDetectRequest(req)
     
     print

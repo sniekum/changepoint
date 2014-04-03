@@ -13,7 +13,13 @@
   <depend package="roscpp"/>
   <depend package="articulation_msgs"/>
   <depend package="articulation_models"/>
+  <depend package="pluginlib"/>
   <rosdep name="eigen" />
+  
+  <export>
+    <changepoint plugin="${prefix}/default_cp_plugin.xml" />
+  </export>
+
   
 </package>
 
