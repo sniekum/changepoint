@@ -55,12 +55,12 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         #Now, calc other coords in axis frame -- rotation axis is x-forward
         coord1 =  geometry_msgs.msg.PoseStamped()
         coord1.header.frame_id =  'circ_axis_pose'
-        c1 = [radius * -np.cos(min_q), radius * np.sin(min_q), 0, 0, 0, 0, 1]
+        c1 = [radius * np.cos(min_q), radius * -np.sin(min_q), 0, 0, 0, 0, 1]
         coord1.pose = gen_utils.vecToRosPose(c1)
         
         coord2 =  geometry_msgs.msg.PoseStamped()
         coord2.header.frame_id =  'circ_axis_pose'
-        c2 = [radius * -np.cos(min_q), radius * np.sin(max_q), 0, 0, 0, 0, 1]
+        c2 = [radius * np.cos(min_q), radius * -np.sin(max_q), 0, 0, 0, 0, 1]
         coord2.pose = gen_utils.vecToRosPose(c2)
         
         #Finally, do the transforms to get in robot frame
@@ -187,6 +187,6 @@ if __name__ == '__main__':
     r = 0.1024
     c = [-0.02215, -0.02017, -0.0014]
     a = [-0.0302, -0,0407, 0.99867, -0.00899]
-    min_q = -2.755 + np.pi
-    max_q = -2.5 + np.pi
+    min_q = -2.755 
+    max_q = -2.5 
     drawWedge(1, r, c, a, min_q, max_q)
