@@ -85,8 +85,10 @@ def drawGraspAxis(tag_id, center, axis):
     wm = arWorldModel.ARWorldModel()
     tformer = tf.TransformerROS(True, rospy.Duration(10.0))
     
-    while 1:
-        tag_pose = wm.getObjectById(tag_id)
+    rospy.sleep(1.0)
+
+    while not rospy.is_shutdown():
+        tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
 
         #First, make a frame for the base marker
         m = geometry_msgs.msg.TransformStamped()
@@ -104,18 +106,18 @@ def drawGraspAxis(tag_id, center, axis):
         
         #Now, calc coords in axis frame -- rotation axis is x-forward
         coord1 =  geometry_msgs.msg.PoseStamped()
-        circ_axis.header.frame_id =  'circ_axis_pose'
+        coord1.header.frame_id =  'circ_axis_pose'
         c1 = [0, 0, 0, 0, 0, 0, 1]
         coord1.pose = gen_utils.vecToRosPose(c1)
         
         #Finally, do the transforms to get in robot frame
         try:
             tp1 = tformer.transformPose('torso_lift_link',coord1)
-            grasp_axis = gen_utils.rosPoseToVec(tp1)
+            grasp_axis = gen_utils.rosPoseToVec(tp1.pose)
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             print "\n drawWedge(): TF transform problem!"
         
-        draw_utils.drawGoal(grasp_axis)
+        draw_utils.drawArrow(grasp_axis, [0.1, 0.01, 0.01], [0,1,0,1])
         
         rospy.sleep(0.1)  
         
@@ -145,8 +147,8 @@ def drawRigidDirections(tag_id, traj):
     if max(traj_z) - min(traj_z) > eps:
         draw_z = True
     
-    while 1:
-        tag_pose = wm.getObjectById(tag_id)
+    while not rospy.is_shutdown():
+        tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
         tpq = tf.Quaternion(tag_pose[3:])  
         
         if draw_x:
@@ -184,9 +186,20 @@ if __name__ == '__main__':
     
     rospy.init_node('rvizArtic')
     
-    r = 0.1024
-    c = [-0.02215, -0.02017, -0.0014]
-    a = [-0.0302, -0,0407, 0.99867, -0.00899]
-    min_q = -2.755 
-    max_q = -2.5 
-    drawWedge(1, r, c, a, min_q, max_q)
+    #r = 0.1024
+    #c = [-0.02215, -0.02017, -0.0014]
+    #a = [-0.0302, -0,0407, 0.99867, -0.00899]
+    #min_q = -2.755 
+    #max_q = -2.5 
+    #drawWedge(1, r, c, a, min_q, max_q)
+
+    #prismatic_dir.x : -0.215005492967
+    #prismatic_dir.y : 0.925764394093
+    #prismatic_dir.z : 0.311019170829
+    #rigid_position.x : -0.0225000537285
+    #rigid_position.y : -0.109253380959
+    #rigid_position.z : -0.0523021798595
+
+    c = [-0.00438106158762,0.0219812866424,-0.0291447669762]
+    a = [0.154436288188,0.134253967621,-0.377609576905,0.903070491433]
+    drawGraspAxis(0,c,a)
