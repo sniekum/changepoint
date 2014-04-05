@@ -24,16 +24,11 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
     wm = arWorldModel.ARWorldModel()
     tformer = tf.TransformerROS(True, rospy.Duration(10.0))
     
-    while 1:
-        tag_pose = wm.getObjectById(tag_id)
-        p0 = [0.0]*3
-        p1 = [0.0]*3
-        p2 = [0.0]*3
+    rospy.sleep(1.0) #Let the world model warm up
+
+    while not rospy.is_shutdown():
+        tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
         
-        #Calc center point
-        for i in xrange(3):
-            p0[i] = tag_pose[i] + center[i]
-            
         #Calc points on circumference  
         #First, make a frame for the base marker
         m = geometry_msgs.msg.TransformStamped()
@@ -41,7 +36,7 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         m.child_frame_id = 'base_marker_pose'
         m.transform = gen_utils.vecToRosTransform(tag_pose)
         tformer.setTransform(m)
-        
+
         #Then, add a transform from base marker to axis of rotation
         m = geometry_msgs.msg.TransformStamped()
         m.header.frame_id = 'base_marker_pose'
@@ -49,23 +44,31 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         m.transform = gen_utils.vecToRosTransform(center+axis)
         tformer.setTransform(m)
         
-        #Now, calc coords in axis frame -- rotation axis is x-forward
+        #Calc the center point
+        coord0 =  geometry_msgs.msg.PoseStamped()
+        coord0.header.frame_id =  'circ_axis_pose'
+        c0 = [0, 0, 0, 0, 0, 0, 1]
+        coord0.pose = gen_utils.vecToRosPose(c0)
+        tp0 = tformer.transformPose('torso_lift_link',coord0)
+        p0 = gen_utils.rosPoseToVec(tp0.pose)
+
+        #Now, calc other coords in axis frame -- rotation axis is x-forward
         coord1 =  geometry_msgs.msg.PoseStamped()
-        circ_axis.header.frame_id =  'circ_axis_pose'
-        c1 = [0, radius * -cos(min_q), radius * sin(min_q), 0, 0, 0, 1]
+        coord1.header.frame_id =  'circ_axis_pose'
+        c1 = [radius * -np.cos(min_q), radius * np.sin(min_q), 0, 0, 0, 0, 1]
         coord1.pose = gen_utils.vecToRosPose(c1)
         
         coord2 =  geometry_msgs.msg.PoseStamped()
-        circ_axis.header.frame_id =  'circ_axis_pose'
-        c2 = [0, radius * -cos(min_q), radius * sin(max_q), 0, 0, 0, 1]
+        coord2.header.frame_id =  'circ_axis_pose'
+        c2 = [radius * -np.cos(min_q), radius * np.sin(max_q), 0, 0, 0, 0, 1]
         coord2.pose = gen_utils.vecToRosPose(c2)
         
         #Finally, do the transforms to get in robot frame
         try:
             tp1 = tformer.transformPose('torso_lift_link',coord1)
             tp2 = tformer.transformPose('torso_lift_link',coord2)
-            p1 = gen_utils.rosPoseToVec(tp1)
-            p2 = gen_utils.rosPoseToVec(tp2)
+            p1 = gen_utils.rosPoseToVec(tp1.pose)
+            p2 = gen_utils.rosPoseToVec(tp2.pose)
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             print "\n drawWedge(): TF transform problem!"
         
@@ -74,7 +77,7 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         rospy.sleep(0.1)
         
         
-        
+       
 def drawGraspAxis(tag_id, center, axis):
 
     gen_utils = generalUtils.GeneralUtils()
@@ -181,9 +184,9 @@ if __name__ == '__main__':
     
     rospy.init_node('rvizArtic')
     
-    r = 1.0
-    c = [0.0, 0.0, 0.0]
-    a = [0.0, 0.0, 0.0, 1.0]
-    min_q = 0.67
-    max_q = 0.79
-    drawWedge(0, r, c, a, min_q, max_q)
+    r = 0.1024
+    c = [-0.02215, -0.02017, -0.0014]
+    a = [-0.0302, -0,0407, 0.99867, -0.00899]
+    min_q = -2.755 + np.pi
+    max_q = -2.5 + np.pi
+    drawWedge(1, r, c, a, min_q, max_q)
