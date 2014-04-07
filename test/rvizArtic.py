@@ -78,7 +78,7 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         
         
        
-def drawGraspAxis(tag_id, center, axis):
+def drawGraspAxis(tag_id, radius, center, axis, orient):
 
     gen_utils = generalUtils.GeneralUtils()
     draw_utils = drawUtils.DrawUtils()
@@ -88,20 +88,20 @@ def drawGraspAxis(tag_id, center, axis):
     rospy.sleep(1.0)
 
     while not rospy.is_shutdown():
-        tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
-
+        wmstate = wm.getPartialWorldState([tag_id])
+        tag_pose = wmstate[tag_id]
+        
         #First, make a frame for the base marker
         m = geometry_msgs.msg.TransformStamped()
         m.header.frame_id = 'torso_lift_link'
         m.child_frame_id = 'base_marker_pose'
         m.transform = gen_utils.vecToRosTransform(tag_pose)
         tformer.setTransform(m)
-        
-        #Then, add a transform from base marker to axis of rotation
+           
         m = geometry_msgs.msg.TransformStamped()
-        m.header.frame_id = 'base_marker_pose'
-        m.child_frame_id = 'circ_axis_pose'
-        m.transform = gen_utils.vecToRosTransform(center+axis)
+        m.header.frame_id = 'circ_axis_pose'
+        m.child_frame_id = 'base_marker_pose'
+        m.transform = gen_utils.vecToRosTransform([radius,0,0]+orient)
         tformer.setTransform(m)
         
         #Now, calc coords in axis frame -- rotation axis is x-forward
@@ -147,6 +147,8 @@ def drawRigidDirections(tag_id, traj):
     if max(traj_z) - min(traj_z) > eps:
         draw_z = True
     
+    rospy.sleep(1.0) #Let the world model warm up
+
     while not rospy.is_shutdown():
         tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
         tpq = tf.Quaternion(tag_pose[3:])  
