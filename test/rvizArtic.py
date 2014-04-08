@@ -78,7 +78,7 @@ def drawWedge(tag_id, radius, center, axis, min_q, max_q):
         
         
        
-def drawGraspAxis(tag_id, radius, center, axis, orient):
+def drawGraspAxis(tag_id, radius, orient):
 
     gen_utils = generalUtils.GeneralUtils()
     draw_utils = drawUtils.DrawUtils()
@@ -99,15 +99,18 @@ def drawGraspAxis(tag_id, radius, center, axis, orient):
         tformer.setTransform(m)
            
         m = geometry_msgs.msg.TransformStamped()
-        m.header.frame_id = 'circ_axis_pose'
-        m.child_frame_id = 'base_marker_pose'
-        m.transform = gen_utils.vecToRosTransform([radius,0,0]+orient)
+        m.header.frame_id = 'base_marker_pose'
+        m.child_frame_id = 'circ_temp'
+        inv = [-orient[0], -orient[1], -orient[2], orient[3]]
+        m.transform = gen_utils.vecToRosTransform([0,0,0]+[0,0,0,1])
+        #m.transform = gen_utils.vecToRosTransform([0,0,0]+inv)
         tformer.setTransform(m)
         
         #Now, calc coords in axis frame -- rotation axis is x-forward
         coord1 =  geometry_msgs.msg.PoseStamped()
-        coord1.header.frame_id =  'circ_axis_pose'
-        c1 = [0, 0, 0, 0, 0, 0, 1]
+        coord1.header.frame_id =  'circ_temp'
+        rotq = [0, .7071, 0, -.7071] 
+        c1 = [radius, 0, -.1] + rotq
         coord1.pose = gen_utils.vecToRosPose(c1)
         
         #Finally, do the transforms to get in robot frame
@@ -117,7 +120,7 @@ def drawGraspAxis(tag_id, radius, center, axis, orient):
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             print "\n drawWedge(): TF transform problem!"
         
-        draw_utils.drawArrow(grasp_axis, [0.1, 0.01, 0.01], [0,1,0,1])
+        draw_utils.drawArrow(grasp_axis, [0.2, 0.015, 0.015], [0,1,0,1])
         
         rospy.sleep(0.1)  
         
@@ -136,9 +139,9 @@ def drawRigidDirections(tag_id, traj):
     eps = 0.05 #meters  #FOR NOW, DON'T WORRY ABOUT ROTATIONAL DOFs
     
     traj_x = [traj[i][0] for i in xrange(len(traj))]
-    traj_y = [traj[i][0] for i in xrange(len(traj))]
-    traj_z = [traj[i][0] for i in xrange(len(traj))]
-    
+    traj_y = [traj[i][1] for i in xrange(len(traj))]
+    traj_z = [traj[i][2] for i in xrange(len(traj))]
+
     draw_x = draw_y = draw_z = False
     if max(traj_x) - min(traj_x) > eps:
         draw_x = True
@@ -147,38 +150,95 @@ def drawRigidDirections(tag_id, traj):
     if max(traj_z) - min(traj_z) > eps:
         draw_z = True
     
+    print "DRAW"
+    print draw_x, draw_y, draw_z    
+    print max(traj_x) - min(traj_x)
+    print max(traj_y) - min(traj_y)
+    print max(traj_z) - min(traj_z)
+
     rospy.sleep(1.0) #Let the world model warm up
 
     while not rospy.is_shutdown():
         tag_pose = (wm.getPartialWorldState([tag_id]))[tag_id]
-        tpq = tf.Quaternion(tag_pose[3:])  
+        m = geometry_msgs.msg.TransformStamped()
+        m.header.frame_id = 'torso_lift_link'
+        m.child_frame_id = 'base_marker_pose'
+        m.transform = gen_utils.vecToRosTransform(tag_pose)
+        tformer.setTransform(m)
         
         if draw_x:
-            rotate180z = tf.createQuaternionFromRPY(0,0,np.pi)
-            q2 = tpq * rotate180z
-            pose2 = tag_pos[0:3] + [q2.x, q2.y, q2.z, q2.w]
-            draw_utils.drawArrow(tag_pose)
-            draw_utils.drawArrow(pose2)
+            rotate180z = [0, 0, 1, 0] 
+            coord2 =  geometry_msgs.msg.PoseStamped()
+            coord2.header.frame_id =  'base_marker_pose' 
+            c2 = [0, 0, 0] + rotate180z
+            coord2.pose = gen_utils.vecToRosPose(c2)
+
+            try:
+                tp2 = tformer.transformPose('torso_lift_link',coord2)
+                pose2 = gen_utils.rosPoseToVec(tp2.pose)
+            except (tf.Exception, tf.LookupException, tf.ConnectivityException):
+                print "\n drawRigidDirections(): TF transform problem!"
+            
+            draw_utils.drawArrow(tag_pose, [0.2, 0.015, 0.015], [.5,0,.5,1], 1)
+            draw_utils.drawArrow(pose2, [0.2, 0.015, 0.015], [.5,0,.5,1], 2)
             
         if draw_y:
-            rotate90zpos = tf.createQuaternionFromRPY(0,0,np.pi/2.0)
-            rotate90zneg = tf.createQuaternionFromRPY(0,0,-np.pi/2.0)
-            q1 = tpq * rotate90zpos
-            q2 = tpq * rotate90zneg
-            pose1 = tag_pos[0:3] + [q1.x, q1.y, q1.z, q1.w]
-            pose2 = tag_pos[0:3] + [q2.x, q2.y, q2.z, q2.w]
-            draw_utils.drawArrow(pose1)
-            draw_utils.drawArrow(pose2)
+            rotate90zpos = [0, 0, .7071, .7071] 
+            rotate90zneg = [0, 0, .7071, -.7071] 
+            
+            coord1 =  geometry_msgs.msg.PoseStamped()
+            coord1.header.frame_id =  'base_marker_pose' 
+            c1 = [0, 0, 0] + rotate90zpos
+            coord1.pose = gen_utils.vecToRosPose(c1)
+
+            try:
+                tp1 = tformer.transformPose('torso_lift_link',coord1)
+                pose1 = gen_utils.rosPoseToVec(tp1.pose)
+            except (tf.Exception, tf.LookupException, tf.ConnectivityException):
+                print "\n drawRigidDirections(): TF transform problem!"
+
+            coord2 =  geometry_msgs.msg.PoseStamped()
+            coord2.header.frame_id =  'base_marker_pose' 
+            c2 = [0, 0, 0] + rotate90zneg
+            coord2.pose = gen_utils.vecToRosPose(c2)
+
+            try:
+                tp2 = tformer.transformPose('torso_lift_link',coord2)
+                pose2 = gen_utils.rosPoseToVec(tp2.pose)
+            except (tf.Exception, tf.LookupException, tf.ConnectivityException):
+                print "\n drawRigidDirections(): TF transform problem!"
+
+            draw_utils.drawArrow(pose1, [0.2, 0.015, 0.015], [.5,0,.5,1], 3)
+            draw_utils.drawArrow(pose2, [0.2, 0.015, 0.015], [.5,0,.5,1], 4)
             
         if draw_z:
-            rotate90ypos = tf.createQuaternionFromRPY(0.0, np.pi/2.0, 0.0)
-            rotate90yneg = tf.createQuaternionFromRPY(0,0, -np.pi/2.0, 0,0)
-            q1 = tpq * rotate90ypos
-            q2 = tpq * rotate90yneg
-            pose1 = tag_pos[0:3] + [q1.x, q1.y, q1.z, q1.w]
-            pose2 = tag_pos[0:3] + [q2.x, q2.y, q2.z, q2.w]
-            draw_utils.drawArrow(pose1)
-            draw_utils.drawArrow(pose2)
+            rotate90ypos = [0, .7071, 0, .7071] 
+            rotate90yneg = [0, .7071, 0, -.7071] 
+            
+            coord1 =  geometry_msgs.msg.PoseStamped()
+            coord1.header.frame_id =  'base_marker_pose'
+            c1 = [0, 0, 0] + rotate90ypos
+            coord1.pose = gen_utils.vecToRosPose(c1)
+
+            try:
+                tp1 = tformer.transformPose('torso_lift_link',coord1)
+                pose1 = gen_utils.rosPoseToVec(tp1.pose)
+            except (tf.Exception, tf.LookupException, tf.ConnectivityException):
+                print "\n drawRigidDirections(): TF transform problem!"
+
+            coord2 =  geometry_msgs.msg.PoseStamped()
+            coord2.header.frame_id =  'base_marker_pose'
+            c2 = [0, 0, 0] + rotate90yneg
+            coord2.pose = gen_utils.vecToRosPose(c2)
+
+            try:
+                tp2 = tformer.transformPose('torso_lift_link',coord2)
+                pose2 = gen_utils.rosPoseToVec(tp2.pose)
+            except (tf.Exception, tf.LookupException, tf.ConnectivityException):
+                print "\n drawRigidDirections(): TF transform problem!"
+
+            draw_utils.drawArrow(pose1, [0.2, 0.015, 0.015], [.5,0,.5,1], 5)
+            draw_utils.drawArrow(pose2, [0.2, 0.015, 0.015], [.5,0,.5,1], 6)
             
         rospy.sleep(0.1) 
         
@@ -195,13 +255,7 @@ if __name__ == '__main__':
     #max_q = -2.5 
     #drawWedge(1, r, c, a, min_q, max_q)
 
-    #prismatic_dir.x : -0.215005492967
-    #prismatic_dir.y : 0.925764394093
-    #prismatic_dir.z : 0.311019170829
-    #rigid_position.x : -0.0225000537285
-    #rigid_position.y : -0.109253380959
-    #rigid_position.z : -0.0523021798595
 
-    c = [-0.00438106158762,0.0219812866424,-0.0291447669762]
-    a = [0.154436288188,0.134253967621,-0.377609576905,0.903070491433]
-    drawGraspAxis(0,c,a)
+    r =  0.12634677978
+    o = [0.0768123576463,-0.00533408064445,0.667130229488,0.74095119016]
+    drawGraspAxis(0,r,o)
