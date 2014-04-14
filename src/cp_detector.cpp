@@ -43,13 +43,20 @@
 #include "changepoint/gauss1D.h"
 #include <pluginlib/class_loader.h>
 
-
+//GAUSS1D
 #define SQRT2PI 2.50662827463
-#define LEN_MEAN 100.0                // Mean of segment length gaussian 
-#define LEN_SIG 5.0                  // Sigma of segment length gaussian
-#define MIN_SEG_LEN 10                // The minimum length of a segment for model fitting purposes
-#define MAX_PARTICLES 10              // The most particles to ever keep in the filter
-#define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
+#define LEN_MEAN 1.0                 // Mean of segment length gaussian 
+#define LEN_SIG 30.0                   // Sigma of segment length gaussian
+#define MIN_SEG_LEN 1                // The minimum length of a segment for model fitting purposes
+#define MAX_PARTICLES 100              // The most particles to ever keep in the filter
+#define RESAMP_PARTICLES 100           // The number of particles to resample back down to when resampling 
+
+//ARTIC
+//#define LEN_MEAN 100.0                // Mean of segment length gaussian 
+//#define LEN_SIG 5.0                   // Sigma of segment length gaussian
+//#define MIN_SEG_LEN 10                // The minimum length of a segment for model fitting purposes
+//#define MAX_PARTICLES 10              // The most particles to ever keep in the filter
+//#define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
 
 using namespace std;
 using namespace articulation_models;
@@ -312,7 +319,7 @@ vector<ModelSegment> CPDetector::detectChangepoints(string class_type)
             else
                 p->MAP = p_tjq + logLenPDF(seg_len) - logOneMinLenCDF(seg_len-1);
                        
-            //printf("t %i   pos %i   model %s   ll %f   evi %f   tjq %f   map %f\n",t,p->pos,p->fit_params->getModelName().c_str(),p->fit_params->logLikelihood,p->fit_params->modelEvidence,p_tjq,p->MAP);
+            printf("t %i   pos %i   model %s   ll %f   evi %f   tjq %f   map %f\n",t,p->pos,p->fitter->mp->getModelName().c_str(),p->fitter->mp->logLikelihood,p->fitter->mp->modelEvidence,p_tjq,p->MAP);
         
         }
                       

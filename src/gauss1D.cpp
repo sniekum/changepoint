@@ -74,17 +74,18 @@ void Gauss1DParams::fillParams(ModelSegment &seg)
     
 //***************************************************************************************************************    
     
-    
+///*
+// Standard version assumes mean 0, fits the variance    
 bool Gauss1DFitter::fitSegment(double **data, const int start, const int end)
 {    
     Gauss1DParams *gp = static_cast<Gauss1DParams*>(mp);
     
     int n = end-start;
     
-    double mu = 0;
-    for(int i=start+1; i<=end; i++)
-        mu += data[i][0];
-    mu /= n;
+    double mu = 0.0;
+    //for(int i=start+1; i<=end; i++)
+    //    mu += data[i][0];
+    //mu /= n;
     
     double sigma = 0;
     for(int i=start+1; i<=end; i++)
@@ -107,5 +108,37 @@ bool Gauss1DFitter::fitSegment(double **data, const int start, const int end)
     
     return true;
 }
+//*/
+
+/*
+// This alternate version marginalizes over sigma values
+bool Gauss1DFitter::fitSegment(double **data, const int start, const int end)
+{    
+    Gauss1DParams *gp = static_cast<Gauss1DParams*>(mp);
+    double mu = 0.0;
+    
+    // Gamma hyperparameters
+    double a = 4.0;
+    double b = 2.0;
+    
+    double l_total = 0.0;
+    for(int i=start+1; i<=end; i++){
+        double x = data[i][0];
+        double term1 = a*log(b) - log(tgamma(a));
+        double term2 = 0.5 * log(1.0/(2.0*M_PI));
+        double term3 = (-a-0.5) * log(b + (x-mu)*(x-mu)/2.0);
+        double term4 = log(tgamma(a + 0.5));
+        l_total += term1 + term2 + term3 + term4;
+    }
+    
+    gp->mu = 0;
+    gp->sigma = 0; 
+    
+    gp->logLikelihood = l_total;
+    gp->modelEvidence = l_total;
+    
+    return true;
+}
+*/
 
 } // end namespace
