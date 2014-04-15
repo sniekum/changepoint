@@ -44,7 +44,6 @@ if __name__ == '__main__':
     x = np.random.normal(0.0, 2.5, 60)
     t += x.tolist()
     plot(t)
-    show()
 
     req = DetectChangepointsRequest()
     req.data = [DataPoint([x]) for x in t]
@@ -60,4 +59,6 @@ if __name__ == '__main__':
             print "  ", seg.param_names[i], ":", seg.model_params[i]
         print
               
-
+    for seg in resp.segments[1:]:
+        vlines(seg.first_point,-10,10,linestyles='dashed')
+    show()
