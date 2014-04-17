@@ -35,14 +35,23 @@ if __name__ == '__main__':
     t = []  
     x = np.random.normal(0.0, 2.0, 40)
     t += x.tolist()
-    x = np.random.normal(0.0, 0.5, 60)
+    x = np.random.normal(0.0, 1.0, 60)
     t += x.tolist()
     x = np.random.normal(0.0, 3.0, 30)
     t += x.tolist()
-    x = np.random.normal(0.0, 1.0, 45)
+    x = np.random.normal(0.0, 1.5, 50)
     t += x.tolist()
-    x = np.random.normal(0.0, 2.5, 60)
+    x = np.random.normal(0.0, 2.5, 70)
     t += x.tolist()
+    #plot(t)
+    #show()
+    #pf = open('gauss_pickle.txt','w')
+    #pickle.dump(t,pf)
+    #pf.close()
+    #asdasd
+    
+    pf = open('gauss_pickle_final.txt','r')
+    t = pickle.load(pf)
     plot(t)
 
     req = DetectChangepointsRequest()
@@ -60,5 +69,5 @@ if __name__ == '__main__':
         print
               
     for seg in resp.segments[1:]:
-        vlines(seg.first_point,-10,10,linestyles='dashed')
+        vlines(seg.first_point,-8,8,linestyles='dashed',linewidth=2.0)
     show()
