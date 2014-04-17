@@ -48,8 +48,8 @@
 #define LEN_MEAN 50.0                 // Mean of segment length gaussian 
 #define LEN_SIG 10.0                   // Sigma of segment length gaussian
 #define MIN_SEG_LEN 2                // The minimum length of a segment for model fitting purposes
-#define MAX_PARTICLES 20              // The most particles to ever keep in the filter
-#define RESAMP_PARTICLES 20           // The number of particles to resample back down to when resampling 
+#define MAX_PARTICLES 100              // The most particles to ever keep in the filter
+#define RESAMP_PARTICLES 100           // The number of particles to resample back down to when resampling 
 
 //ARTIC
 //#define LEN_MEAN 100.0                // Mean of segment length gaussian 
