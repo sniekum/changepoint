@@ -109,7 +109,8 @@ public:
 class CPDetector
 {
 public:
-    CPDetector(const std::vector<changepoint::DataPoint> data_pts);
+    CPDetector(const std::vector<changepoint::DataPoint> data_pts, 
+               const changepoint::CPParams cp_params);
     ~CPDetector();
     std::vector<ModelSegment> detectChangepoints(std::string class_type);
     
@@ -125,6 +126,13 @@ private:
     void normalizeMAP();
     double calculateAlpha(int M);
     void resampleParticles(int max_particles, int resamp_particles);
+    
+    //Params
+    double LEN_MEAN;                // Mean of segment length gaussian 
+    double LEN_SIG;                 // Sigma of segment length gaussian
+    int MIN_SEG_LEN;                // The minimum length of a segment for model fitting purposes
+    int MAX_PARTICLES;              // The most particles to ever keep in the filter
+    int RESAMP_PARTICLES;           // The number of particles to resample back down to when resampling 
 };
 
 } // end namespace

@@ -1,5 +1,6 @@
 DataPoint[] data
 string model_type
+CPParams cp_params
 ---
 ModelSegment[] segments
 

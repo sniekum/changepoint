@@ -43,20 +43,8 @@
 #include "changepoint/gauss1D.h"
 #include <pluginlib/class_loader.h>
 
-//GAUSS1D
 #define SQRT2PI 2.50662827463
-#define LEN_MEAN 50.0                 // Mean of segment length gaussian 
-#define LEN_SIG 10.0                   // Sigma of segment length gaussian
-#define MIN_SEG_LEN 2                // The minimum length of a segment for model fitting purposes
-#define MAX_PARTICLES 100              // The most particles to ever keep in the filter
-#define RESAMP_PARTICLES 100           // The number of particles to resample back down to when resampling 
 
-//ARTIC
-//#define LEN_MEAN 100.0                // Mean of segment length gaussian 
-//#define LEN_SIG 5.0                   // Sigma of segment length gaussian
-//#define MIN_SEG_LEN 10                // The minimum length of a segment for model fitting purposes
-//#define MAX_PARTICLES 10              // The most particles to ever keep in the filter
-//#define RESAMP_PARTICLES 10           // The number of particles to resample back down to when resampling 
 
 using namespace std;
 using namespace articulation_models;
@@ -80,7 +68,7 @@ bool createHelper(string class_type, ModelFitter* &c)
 }
 
      
-CPDetector::CPDetector(const vector<DataPoint> data_pts)
+CPDetector::CPDetector(const vector<DataPoint> data_pts, const changepoint::CPParams cp_params)
 {
     d_len = data_pts.size();
     if(d_len > 0){
@@ -94,6 +82,12 @@ CPDetector::CPDetector(const vector<DataPoint> data_pts)
             data[i][j] = data_pts[i].point[j];
         }
     }
+    
+    LEN_MEAN = cp_params.len_mean;                 
+    LEN_SIG = cp_params.len_sigma;                
+    MIN_SEG_LEN = cp_params.min_seg_len;                
+    MAX_PARTICLES = cp_params.max_particles;              
+    RESAMP_PARTICLES = cp_params.resamp_particles;
 }
 
 CPDetector::~CPDetector()

@@ -16,6 +16,7 @@ from matplotlib.patches import Circle
 from itertools import product
 import pickle
 
+
 def rotation_matrix(d):
     """
     Calculates a rotation matrix given a vector d. The direction of d
@@ -96,71 +97,28 @@ def makeDetectRequest(req):
         print "Service call failed: %s"%e
 
         
-def causalDetection(data):
-    epsilon = 10  #Number of data points before CP to check
-        
-    pre_data = data[0 : -epsilon]
-    eps_data = data[-epsilon :]
-    
-    #Look for estimated configuration range q (Sturm's notation) that happens in eps, but is disjoint from pre
-    unique = []
-    pre_min = min(pre_data)
-    pre_max = max(pre_data)
-    
-    for x in eps_data:
-        if x < min or x > max:
-            unique.append(x)
-            
-    return unique
         
         
 if __name__ == '__main__':
     rospy.init_node('changepoint_test')
     
-    #Best overall params: sigmas=0.0075, pi/10, min=10, particles=10, 100/5 gauss time
-    #Stapler ex4 traj2
-    #Eraser ex6 traj2
-    #Table ex3 traj1 + filtering
-    
-    #f = open('bagfiles/3-2-14/stapler2/ex4/diffpickle.txt', 'r')
-    #f = open('data/4-5-14/new_stapler/ex4/diffpickle.txt', 'r')
-    f = open('bagfiles/3-2-14/eraser/ex6/diffpickle.txt', 'r')
-    #f = open('bagfiles/3-2-14/tableshow/ex3/diffpickle.txt', 'r')
-    
+    #Load data - we want the relative difference between 2 object poses
+    #m1 and m2 are the trajectories of obj1 and obj2 alone
+    #traj1 is obj1-obj2, traj2 is obj2-obj1.  Notice a significant difference. 
+    f = open('data/artic_data.txt', 'r')    
     [m1, m2, traj1, traj2] = pickle.load(f)
     traj = traj2
-    
-    #Remove points before obj contact
-    #thresh = 0.18
-    #first = len(traj)
-    #for i in xrange(len(traj)):
-    #    d = np.fabs(traj[i][0])*np.fabs(traj[i][0]) + np.fabs(traj[i][1])*np.fabs(traj[i][1]) + np.fabs(traj[i][2])*np.fabs(traj[i][2])
-    #    if np.sqrt(d) < thresh:
-    #        first = i
-    #        break
-    #print "first: ", first
-    #traj = traj[first:]
-    
-    X = np.array([traj[i][0] for i in xrange(len(traj))])
-    Y = np.array([traj[i][1] for i in xrange(len(traj))])
-    Z = np.array([traj[i][2] for i in xrange(len(traj))])
-    
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.set_aspect('equal')
-    
-    #ax.scatter(X,Y,Z)
-    #max_range = max(X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min())
-    #X_buffer = (max_range - (X.max()-X.min())) / 2.0
-    #Y_buffer = (max_range - (Y.max()-Y.min())) / 2.0
-    #Z_buffer = (max_range - (Z.max()-Z.min())) / 2.0
-    #ax.auto_scale_xyz([X.min()-X_buffer, X.max()+X_buffer], [Y.min()-Y_buffer, Y.max()+Y_buffer], [Z.min()-Z_buffer, Z.max()+Z_buffer])
-    #plt.show()       
-    #asasdasdas
     
     req = DetectChangepointsRequest()
     req.data = [DataPoint(x) for x in traj]
     req.model_type = 'changepoint/ArticulationFitter'
+    
+    req.cp_params.len_mean = 100.0
+    req.cp_params.len_sigma = 5.0
+    req.cp_params.min_seg_len = 10
+    req.cp_params.max_particles = 10
+    req.cp_params.resamp_particles = 10
+    
     resp = makeDetectRequest(req)
     
     print
@@ -171,64 +129,60 @@ if __name__ == '__main__':
         for i in xrange(len(seg.model_params)):
             print "  ", seg.param_names[i], ":", seg.model_params[i]
         print
-        
-    first_seg = resp.segments[0]
-    stats = first_seg.seg_stats
-    configs = [stats[i].point[0] for i in xrange(len(stats))]
-    print "Configs:"
-    print configs
-    print
-    print "Causal:"
-    u = causalDetection(configs)
-    print u
-    print "min:", min(u)
-    print "max", max(u)
     
-    GRAPH_ARTIC = True
+    ########### Drawing code ###########
+    
+    X = np.array([traj[i][0] for i in xrange(len(traj))])
+    Y = np.array([traj[i][1] for i in xrange(len(traj))])
+    Z = np.array([traj[i][2] for i in xrange(len(traj))])
+    
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.set_aspect('equal')
+        
     colors = []
     choices = ['red','green','blue','purple','yellow','black']
     i = 0
     for seg in resp.segments:
         colors += [choices[i]] * (seg.last_point - seg.first_point + 1) 
         
-        if GRAPH_ARTIC:
-            params = seg.model_params
-            if(seg.model_name == "rotational"):
-                p = Circle((0,0), params[0], facecolor = 'None', edgecolor = choices[i], alpha = .6)
-                ax.add_patch(p)
-                
-                q = (params[7], params[4], params[5], params[6])
-                v = (0,0,1) # The default normal of a circle that we want to rotate by q
-                qv = qv_mult(q,v)
-                
-                pathpatch_2d_to_3d(p, z=0, normal = qv)
-                pathpatch_translate(p, (params[1], params[2], params[3]))
-                
-            if(seg.model_name == "prismatic"):
-                llen = 1
-                sx = params[0]
-                sy = params[1]
-                sz = params[2]
-                px = params[3]  
-                py = params[4]
-                pz = params[5]  
-                lx = [px-(sx*llen),px+(sx*llen)]
-                ly = [py-(sy*llen),py+(sy*llen)]
-                lz = [pz-(sz*llen),pz+(sz*llen)]
-                ax.plot(lx,ly,lz, color=choices[i], alpha=0.6)
-                
-            if(seg.model_name == "rigid"):
-                rx = params[0]
-                ry = params[1]
-                rz = params[2]
-                rad = 0.0075 * 3 #3-sigma
-                
-                phi = np.linspace(0, 2 * np.pi, 100)
-                theta = np.linspace(0, np.pi, 100)
-                xm = rad * np.outer(np.cos(phi), np.sin(theta)) + rx
-                ym = rad * np.outer(np.sin(phi), np.sin(theta)) + ry
-                zm = rad * np.outer(np.ones(np.size(phi)), np.cos(theta)) + rz
-                ax.plot_surface(xm, ym, zm, color=choices[i], alpha=0.4, linewidth=0)
+        params = seg.model_params
+        if(seg.model_name == "rotational"):
+            p = Circle((0,0), params[0], facecolor = 'None', edgecolor = choices[i], alpha = .6)
+            ax.add_patch(p)
+            
+            q = (params[7], params[4], params[5], params[6])
+            v = (0,0,1) # The default normal of a circle that we want to rotate by q
+            qv = qv_mult(q,v)
+            
+            pathpatch_2d_to_3d(p, z=0, normal = qv)
+            pathpatch_translate(p, (params[1], params[2], params[3]))
+            
+        if(seg.model_name == "prismatic"):
+            llen = 1
+            sx = params[0]
+            sy = params[1]
+            sz = params[2]
+            px = params[3]  
+            py = params[4]
+            pz = params[5]  
+            lx = [px-(sx*llen),px+(sx*llen)]
+            ly = [py-(sy*llen),py+(sy*llen)]
+            lz = [pz-(sz*llen),pz+(sz*llen)]
+            ax.plot(lx,ly,lz, color=choices[i], alpha=0.6)
+            
+        if(seg.model_name == "rigid"):
+            rx = params[0]
+            ry = params[1]
+            rz = params[2]
+            rad = 0.0075 * 3 #3-sigma
+            
+            phi = np.linspace(0, 2 * np.pi, 100)
+            theta = np.linspace(0, np.pi, 100)
+            xm = rad * np.outer(np.cos(phi), np.sin(theta)) + rx
+            ym = rad * np.outer(np.sin(phi), np.sin(theta)) + ry
+            zm = rad * np.outer(np.ones(np.size(phi)), np.cos(theta)) + rz
+            ax.plot_surface(xm, ym, zm, color=choices[i], alpha=0.4, linewidth=0)
                             
         i = (i+1) % len(choices)
     
