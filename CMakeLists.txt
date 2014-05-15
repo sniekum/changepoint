@@ -44,4 +44,4 @@ rosbuild_add_executable(changepoint_server nodes/changepoint_server.cpp)
 target_link_libraries(changepoint_server changepoint)
 #rosbuild_link_boost(changepoint multiprecision)
 
-rosbuild_make_distribution(0.2.0)
+rosbuild_make_distribution(0.1.0)
